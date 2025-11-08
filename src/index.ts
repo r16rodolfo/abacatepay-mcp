@@ -23,9 +23,9 @@ async function main() {
     const server = createServer();
     const transport = new StdioServerTransport();
     await server.connect(transport);
-    console.error("Abacate Pay MCP Server rodando em stdio");
+    console.log("🥑 Abacate Pay MCP Server rodando em stdio");
   } catch (error) {
-    console.error("Erro fatal em main():", error);
+    console.error("❌ Erro fatal em main():", error);
     process.exit(1);
   }
 }
