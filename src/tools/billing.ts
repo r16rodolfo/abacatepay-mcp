@@ -1,6 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { makeAbacatePayRequest } from "../http/api.js";
+import { resolveApiKey } from "../utils/api-key.js";
+import { formatHttpError } from "../utils/errors.js";
 
 export function registerBillingTools(server: McpServer) {
   server.tool(
@@ -23,6 +25,19 @@ export function registerBillingTools(server: McpServer) {
     },
     async (params) => {
       const { apiKey, frequency, methods, products, returnUrl, completionUrl, customerId } = params as any;
+      
+      const finalApiKey = resolveApiKey(apiKey);
+      if (!finalApiKey) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: "❌ Erro: API key é obrigatória. Forneça via parâmetro apiKey, configure via header HTTP, ou configure globalmente via variável de ambiente ABACATE_PAY_API_KEY."
+            }
+          ]
+        };
+      }
+      
       try {
         const requestBody: any = {
           frequency,
@@ -36,7 +51,7 @@ export function registerBillingTools(server: McpServer) {
           requestBody.customerId = customerId;
         }
 
-        const response = await makeAbacatePayRequest<any>("/billing/create", apiKey, {
+        const response = await makeAbacatePayRequest<any>("/billing/create", finalApiKey, {
           method: "POST",
           body: JSON.stringify(requestBody)
         });
@@ -62,11 +77,15 @@ export function registerBillingTools(server: McpServer) {
           ]
         };
       } catch (error) {
+        const errorMessage = error instanceof Error 
+          ? formatHttpError(error)
+          : 'Erro desconhecido';
+        
         return {
           content: [
             {
               type: "text",
-              text: `Falha ao criar cobrança: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
+              text: `Falha ao criar cobrança: ${errorMessage}`
             }
           ]
         };
@@ -82,8 +101,21 @@ export function registerBillingTools(server: McpServer) {
     },
     async (params) => {
       const { apiKey } = params as any;
+      
+      const finalApiKey = resolveApiKey(apiKey);
+      if (!finalApiKey) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: "❌ Erro: API key é obrigatória. Forneça via parâmetro apiKey, configure via header HTTP, ou configure globalmente via variável de ambiente ABACATE_PAY_API_KEY."
+            }
+          ]
+        };
+      }
+      
       try {
-        const response = await makeAbacatePayRequest<any>("/billing/list", apiKey, {
+        const response = await makeAbacatePayRequest<any>("/billing/list", finalApiKey, {
           method: "GET"
         });
 
@@ -130,11 +162,15 @@ export function registerBillingTools(server: McpServer) {
           ]
         };
       } catch (error) {
+        const errorMessage = error instanceof Error 
+          ? formatHttpError(error)
+          : 'Erro desconhecido';
+        
         return {
           content: [
             {
               type: "text",
-              text: `Falha ao listar cobranças: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
+              text: `Falha ao listar cobranças: ${errorMessage}`
             }
           ]
         };

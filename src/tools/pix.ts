@@ -1,6 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { makeAbacatePayRequest } from "../http/api.js";
+import { resolveApiKey } from "../utils/api-key.js";
+import { formatHttpError } from "../utils/errors.js";
 
 export function registerPixTools(server: McpServer) {
   server.tool(
@@ -20,6 +22,19 @@ export function registerPixTools(server: McpServer) {
     },
     async (params) => {
       const { apiKey, amount, expiresIn, description, customer } = params as any;
+      
+      const finalApiKey = resolveApiKey(apiKey);
+      if (!finalApiKey) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: "❌ Erro: API key é obrigatória. Forneça via parâmetro apiKey, configure via header HTTP, ou configure globalmente via variável de ambiente ABACATE_PAY_API_KEY."
+            }
+          ]
+        };
+      }
+      
       try {
         const requestBody: any = {
           amount
@@ -37,7 +52,7 @@ export function registerPixTools(server: McpServer) {
           requestBody.customer = customer;
         }
 
-        const response = await makeAbacatePayRequest<any>("/pixQrCode/create", apiKey, {
+        const response = await makeAbacatePayRequest<any>("/pixQrCode/create", finalApiKey, {
           method: "POST",
           body: JSON.stringify(requestBody)
         });
@@ -65,11 +80,15 @@ export function registerPixTools(server: McpServer) {
           ]
         };
       } catch (error) {
+        const errorMessage = error instanceof Error 
+          ? formatHttpError(error)
+          : 'Erro desconhecido';
+        
         return {
           content: [
             {
               type: "text",
-              text: `Falha ao criar QR Code PIX: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
+              text: `Falha ao criar QR Code PIX: ${errorMessage}`
             }
           ]
         };
@@ -87,6 +106,19 @@ export function registerPixTools(server: McpServer) {
     },
     async (params) => {
       const { apiKey, id, metadata } = params as any;
+      
+      const finalApiKey = resolveApiKey(apiKey);
+      if (!finalApiKey) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: "❌ Erro: API key é obrigatória. Forneça via parâmetro apiKey, configure via header HTTP, ou configure globalmente via variável de ambiente ABACATE_PAY_API_KEY."
+            }
+          ]
+        };
+      }
+      
       try {
         const requestBody: any = {};
 
@@ -94,7 +126,7 @@ export function registerPixTools(server: McpServer) {
           requestBody.metadata = metadata;
         }
 
-        const response = await makeAbacatePayRequest<any>(`/pixQrCode/simulate-payment?id=${id}`, apiKey, {
+        const response = await makeAbacatePayRequest<any>(`/pixQrCode/simulate-payment?id=${id}`, finalApiKey, {
           method: "POST",
           body: JSON.stringify(requestBody)
         });
@@ -131,11 +163,15 @@ export function registerPixTools(server: McpServer) {
           ]
         };
       } catch (error) {
+        const errorMessage = error instanceof Error 
+          ? formatHttpError(error)
+          : 'Erro desconhecido';
+        
         return {
           content: [
             {
               type: "text",
-              text: `Falha ao simular pagamento PIX: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
+              text: `Falha ao simular pagamento PIX: ${errorMessage}`
             }
           ]
         };
@@ -152,8 +188,21 @@ export function registerPixTools(server: McpServer) {
     },
     async (params) => {
       const { apiKey, id } = params as any;
+      
+      const finalApiKey = resolveApiKey(apiKey);
+      if (!finalApiKey) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: "❌ Erro: API key é obrigatória. Forneça via parâmetro apiKey, configure via header HTTP, ou configure globalmente via variável de ambiente ABACATE_PAY_API_KEY."
+            }
+          ]
+        };
+      }
+      
       try {
-        const response = await makeAbacatePayRequest<any>(`/pixQrCode/check?id=${id}`, apiKey, {
+        const response = await makeAbacatePayRequest<any>(`/pixQrCode/check?id=${id}`, finalApiKey, {
           method: "GET"
         });
 
@@ -186,11 +235,15 @@ export function registerPixTools(server: McpServer) {
           ]
         };
       } catch (error) {
+        const errorMessage = error instanceof Error 
+          ? formatHttpError(error)
+          : 'Erro desconhecido';
+        
         return {
           content: [
             {
               type: "text",
-              text: `Falha ao verificar status do PIX: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
+              text: `Falha ao verificar status do PIX: ${errorMessage}`
             }
           ]
         };

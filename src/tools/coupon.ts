@@ -1,6 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { makeAbacatePayRequest } from "../http/api.js";
+import { resolveApiKey } from "../utils/api-key.js";
+import { formatHttpError } from "../utils/errors.js";
 
 export function registerCouponTools(server: McpServer) {
   server.tool(
@@ -17,6 +19,19 @@ export function registerCouponTools(server: McpServer) {
     },
     async (params) => {
       const { apiKey, code, discountKind, discount, notes, maxRedeems, metadata } = params as any;
+      
+      const finalApiKey = resolveApiKey(apiKey);
+      if (!finalApiKey) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: "❌ Erro: API key é obrigatória. Forneça via parâmetro apiKey, configure via header HTTP, ou configure globalmente via variável de ambiente ABACATE_PAY_API_KEY."
+            }
+          ]
+        };
+      }
+      
       try {
         const requestBody: any = {
           code,
@@ -34,7 +49,7 @@ export function registerCouponTools(server: McpServer) {
           requestBody.metadata = metadata;
         }
 
-        const response = await makeAbacatePayRequest<any>("/coupon/create", apiKey, {
+        const response = await makeAbacatePayRequest<any>("/coupon/create", finalApiKey, {
           method: "POST",
           body: JSON.stringify(requestBody)
         });
@@ -64,11 +79,15 @@ export function registerCouponTools(server: McpServer) {
           ]
         };
       } catch (error) {
+        const errorMessage = error instanceof Error 
+          ? formatHttpError(error)
+          : 'Erro desconhecido';
+        
         return {
           content: [
             {
               type: "text",
-              text: `Falha ao criar cupom: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
+              text: `Falha ao criar cupom: ${errorMessage}`
             }
           ]
         };
@@ -84,8 +103,21 @@ export function registerCouponTools(server: McpServer) {
     },
     async (params) => {
       const { apiKey } = params as any;
+      
+      const finalApiKey = resolveApiKey(apiKey);
+      if (!finalApiKey) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: "❌ Erro: API key é obrigatória. Forneça via parâmetro apiKey, configure via header HTTP, ou configure globalmente via variável de ambiente ABACATE_PAY_API_KEY."
+            }
+          ]
+        };
+      }
+      
       try {
-        const response = await makeAbacatePayRequest<any>("/coupon/list", apiKey, {
+        const response = await makeAbacatePayRequest<any>("/coupon/list", finalApiKey, {
           method: "GET"
         });
 
@@ -124,11 +156,15 @@ export function registerCouponTools(server: McpServer) {
           ]
         };
       } catch (error) {
+        const errorMessage = error instanceof Error 
+          ? formatHttpError(error)
+          : 'Erro desconhecido';
+        
         return {
           content: [
             {
               type: "text",
-              text: `Falha ao listar cupons: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
+              text: `Falha ao listar cupons: ${errorMessage}`
             }
           ]
         };

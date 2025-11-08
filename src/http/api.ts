@@ -1,4 +1,5 @@
-import { validateApiKey, ABACATE_PAY_API_BASE, USER_AGENT } from "../config.js";
+import { ABACATE_PAY_API_BASE, USER_AGENT } from "../config.js";
+import { resolveApiKey } from "../utils/api-key.js";
 
 export async function makeAbacatePayRequest<T = any>(
   endpoint: string, 
@@ -7,8 +8,14 @@ export async function makeAbacatePayRequest<T = any>(
 ): Promise<T> {
   const url = `${ABACATE_PAY_API_BASE}${endpoint}`;
   
-  // Use provided API key or fall back to global API key
-  const authKey = apiKey || validateApiKey();
+  // Resolve API key usando o helper centralizado
+  const authKey = resolveApiKey(apiKey);
+  if (!authKey) {
+    throw new Error(
+      "API key é obrigatória. Forneça via parâmetro apiKey, " +
+      "configure via header HTTP, ou configure globalmente via variável de ambiente ABACATE_PAY_API_KEY"
+    );
+  }
   
   const headers = {
     'Authorization': `Bearer ${authKey}`,
@@ -28,4 +35,4 @@ export async function makeAbacatePayRequest<T = any>(
   }
 
   return response.json();
-} 
+}
