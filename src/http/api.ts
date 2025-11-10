@@ -8,9 +8,13 @@ export async function makeAbacatePayRequest<T = any>(
 ): Promise<{ data?: T; error?: Error }> {
   const url = `${ABACATE_PAY_API_BASE}${endpoint}`;
   
+  console.log(`[API] Fazendo requisição para: ${endpoint}`);
+  console.log(`[API] API key fornecida como parâmetro:`, apiKey ? `${apiKey.substring(0, 10)}...` : 'não fornecida');
+  
   // Resolve API key usando o helper centralizado
   const authKey = resolveApiKey(apiKey);
   if (!authKey) {
+    console.log(`[API] ❌ API key não encontrada após resolução`);
     return {
       error: new Error(
         "API key é obrigatória. Forneça via parâmetro apiKey, " +
@@ -19,6 +23,8 @@ export async function makeAbacatePayRequest<T = any>(
     };
   }
   
+  console.log(`[API] ✅ API key resolvida: ${authKey.substring(0, 10)}...`);
+  
   const headers = {
     'Authorization': `Bearer ${authKey}`,
     'Content-Type': 'application/json',
@@ -26,18 +32,23 @@ export async function makeAbacatePayRequest<T = any>(
     ...options.headers,
   };
 
+  console.log(`[API] Enviando requisição HTTP ${options.method || 'GET'} para ${url}`);
   const response = await fetch(url, {
     ...options,
     headers,
   });
 
+  console.log(`[API] Resposta recebida: ${response.status} ${response.statusText}`);
+
   if (!response.ok) {
     const errorText = await response.text();
+    console.log(`[API] ❌ Erro HTTP ${response.status}: ${errorText.substring(0, 200)}`);
     return {
       error: new Error(`HTTP ${response.status}: ${errorText}`)
     };
   }
 
   const data = await response.json();
+  console.log(`[API] ✅ Resposta bem-sucedida`);
   return { data };
 }

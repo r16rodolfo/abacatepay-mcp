@@ -17,6 +17,13 @@ export function registerCustomerTools(server: McpServer) {
       taxId: z.string().describe("CPF ou CNPJ válido do cliente (ex: 123.456.789-01 ou 03171207516)")
     },
     async (params) => {
+      console.log(`[TOOL] createCustomer chamado`);
+      console.log(`[TOOL] Parâmetros recebidos:`, { 
+        name: (params as any).name, 
+        email: (params as any).email,
+        apiKey: (params as any).apiKey ? 'fornecida' : 'não fornecida'
+      });
+      
       const { apiKey, name, cellphone, email, taxId } = params as any;
       
       // Resolve API key usando helper centralizado
