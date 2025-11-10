@@ -9,7 +9,6 @@ export function registerPixTools(server: McpServer) {
     "createPixQrCode",
     "Cria um QR Code PIX para pagamento direto",
     {
-      apiKey: z.string().optional().describe("Chave de API do Abacate Pay (opcional se configurada globalmente)"),
       amount: z.number().describe("Valor da cobrança em centavos"),
       expiresIn: z.number().optional().describe("Tempo de expiração em segundos (opcional)"),
       description: z.string().max(140).optional().describe("Mensagem que aparecerá no pagamento PIX (máx 140 caracteres)"),
@@ -21,15 +20,15 @@ export function registerPixTools(server: McpServer) {
       }).optional().describe("Dados do cliente (opcional)")
     },
     async (params) => {
-      const { apiKey, amount, expiresIn, description, customer } = params as any;
+      const { amount, expiresIn, description, customer } = params as any;
       
-      const finalApiKey = resolveApiKey(apiKey);
+      const finalApiKey = resolveApiKey();
       if (!finalApiKey) {
         return {
           content: [
             {
               type: "text",
-              text: "❌ Erro: API key é obrigatória. Forneça via parâmetro apiKey, configure via header HTTP, ou configure globalmente via variável de ambiente ABACATE_PAY_API_KEY."
+              text: "❌ Erro: API key é obrigatória. Configure via header HTTP ou configure globalmente via variável de ambiente ABACATE_PAY_API_KEY."
             }
           ]
         };
@@ -109,20 +108,19 @@ export function registerPixTools(server: McpServer) {
     "simulatePixPayment",
     "Simula o pagamento de um QR Code PIX (apenas em modo desenvolvimento)",
     {
-      apiKey: z.string().optional().describe("Chave de API do Abacate Pay (opcional se configurada globalmente)"),
       id: z.string().describe("ID do QR Code PIX para simular o pagamento"),
       metadata: z.object({}).optional().describe("Metadados opcionais para a requisição")
     },
     async (params) => {
-      const { apiKey, id, metadata } = params as any;
+      const { id, metadata } = params as any;
       
-      const finalApiKey = resolveApiKey(apiKey);
+      const finalApiKey = resolveApiKey();
       if (!finalApiKey) {
         return {
           content: [
             {
               type: "text",
-              text: "❌ Erro: API key é obrigatória. Forneça via parâmetro apiKey, configure via header HTTP, ou configure globalmente via variável de ambiente ABACATE_PAY_API_KEY."
+              text: "❌ Erro: API key é obrigatória. Configure via header HTTP ou configure globalmente via variável de ambiente ABACATE_PAY_API_KEY."
             }
           ]
         };
@@ -201,19 +199,18 @@ export function registerPixTools(server: McpServer) {
     "checkPixStatus",
     "Verifica o status de um QR Code PIX",
     {
-      apiKey: z.string().optional().describe("Chave de API do Abacate Pay (opcional se configurada globalmente)"),
       id: z.string().describe("ID do QR Code PIX para verificar o status")
     },
     async (params) => {
-      const { apiKey, id } = params as any;
+      const { id } = params as any;
       
-      const finalApiKey = resolveApiKey(apiKey);
+      const finalApiKey = resolveApiKey();
       if (!finalApiKey) {
         return {
           content: [
             {
               type: "text",
-              text: "❌ Erro: API key é obrigatória. Forneça via parâmetro apiKey, configure via header HTTP, ou configure globalmente via variável de ambiente ABACATE_PAY_API_KEY."
+              text: "❌ Erro: API key é obrigatória. Configure via header HTTP ou configure globalmente via variável de ambiente ABACATE_PAY_API_KEY."
             }
           ]
         };

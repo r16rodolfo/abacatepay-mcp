@@ -10,7 +10,6 @@ export function registerCustomerTools(server: McpServer) {
     "createCustomer",
     "Cria um novo cliente no Abacate Pay",
     {
-      apiKey: z.string().optional().describe("Chave de API do Abacate Pay (opcional se configurada globalmente)"),
       name: z.string().describe("Nome completo do cliente"),
       cellphone: z.string().describe("Celular do cliente (ex: (11) 4002-8922 ou 79991251557)"),
       email: z.string().email().describe("E-mail do cliente"),
@@ -20,20 +19,19 @@ export function registerCustomerTools(server: McpServer) {
       console.log(`[TOOL] createCustomer chamado`);
       console.log(`[TOOL] Parâmetros recebidos:`, { 
         name: (params as any).name, 
-        email: (params as any).email,
-        apiKey: (params as any).apiKey ? 'fornecida' : 'não fornecida'
+        email: (params as any).email
       });
       
-      const { apiKey, name, cellphone, email, taxId } = params as any;
+      const { name, cellphone, email, taxId } = params as any;
       
       // Resolve API key usando helper centralizado
-      const finalApiKey = resolveApiKey(apiKey);
+      const finalApiKey = resolveApiKey();
       if (!finalApiKey) {
         return {
           content: [
             {
               type: "text",
-              text: "❌ Erro: API key é obrigatória. Forneça via parâmetro apiKey, configure via header HTTP, ou configure globalmente via variável de ambiente ABACATE_PAY_API_KEY."
+              text: "❌ Erro: API key é obrigatória. Configure via header HTTP ou configure globalmente via variável de ambiente ABACATE_PAY_API_KEY."
             }
           ]
         };
@@ -95,19 +93,16 @@ export function registerCustomerTools(server: McpServer) {
     "listCustomers",
     "Lista todos os clientes cadastrados no Abacate Pay",
     {
-      apiKey: z.string().optional().describe("Chave de API do Abacate Pay (opcional se configurada globalmente)")
     },
-    async (params) => {
-      const { apiKey } = params as any;
-      
+    async () => {
       // Resolve API key usando helper centralizado
-      const finalApiKey = resolveApiKey(apiKey);
+      const finalApiKey = resolveApiKey();
       if (!finalApiKey) {
         return {
           content: [
             {
               type: "text",
-              text: "❌ Erro: API key é obrigatória. Forneça via parâmetro apiKey, configure via header HTTP, ou configure globalmente via variável de ambiente ABACATE_PAY_API_KEY."
+              text: "❌ Erro: API key é obrigatória. Configure via header HTTP ou configure globalmente via variável de ambiente ABACATE_PAY_API_KEY."
             }
           ]
         };

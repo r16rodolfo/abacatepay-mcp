@@ -9,7 +9,6 @@ export function registerCouponTools(server: McpServer) {
     "createCoupon",
     "Cria um novo cupom de desconto",
     {
-      apiKey: z.string().optional().describe("Chave de API do Abacate Pay (opcional se configurada globalmente)"),
       code: z.string().describe("Código único do cupom (ex: DESCONTO20)"),
       discountKind: z.enum(["PERCENTAGE", "FIXED"]).describe("Tipo de desconto: PERCENTAGE (porcentagem) ou FIXED (valor fixo)"),
       discount: z.number().describe("Valor do desconto (em % para PERCENTAGE ou em centavos para FIXED)"),
@@ -18,15 +17,15 @@ export function registerCouponTools(server: McpServer) {
       metadata: z.object({}).optional().describe("Metadados adicionais do cupom")
     },
     async (params) => {
-      const { apiKey, code, discountKind, discount, notes, maxRedeems, metadata } = params as any;
+      const { code, discountKind, discount, notes, maxRedeems, metadata } = params as any;
       
-      const finalApiKey = resolveApiKey(apiKey);
+      const finalApiKey = resolveApiKey();
       if (!finalApiKey) {
         return {
           content: [
             {
               type: "text",
-              text: "❌ Erro: API key é obrigatória. Forneça via parâmetro apiKey, configure via header HTTP, ou configure globalmente via variável de ambiente ABACATE_PAY_API_KEY."
+              text: "❌ Erro: API key é obrigatória. Configure via header HTTP ou configure globalmente via variável de ambiente ABACATE_PAY_API_KEY."
             }
           ]
         };
@@ -107,18 +106,15 @@ export function registerCouponTools(server: McpServer) {
     "listCoupons",
     "Lista todos os cupons de desconto criados no Abacate Pay",
     {
-      apiKey: z.string().optional().describe("Chave de API do Abacate Pay (opcional se configurada globalmente)")
     },
     async (params) => {
-      const { apiKey } = params as any;
-      
-      const finalApiKey = resolveApiKey(apiKey);
+      const finalApiKey = resolveApiKey();
       if (!finalApiKey) {
         return {
           content: [
             {
               type: "text",
-              text: "❌ Erro: API key é obrigatória. Forneça via parâmetro apiKey, configure via header HTTP, ou configure globalmente via variável de ambiente ABACATE_PAY_API_KEY."
+              text: "❌ Erro: API key é obrigatória. Configure via header HTTP ou configure globalmente via variável de ambiente ABACATE_PAY_API_KEY."
             }
           ]
         };

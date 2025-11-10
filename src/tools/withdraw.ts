@@ -9,7 +9,6 @@ export function registerWithdrawTools(server: McpServer) {
     "createWithdraw",
     "Cria um novo saque para transferir valores da conta para uma chave PIX",
     {
-      apiKey: z.string().optional().describe("Chave de API do Abacate Pay (opcional se configurada globalmente)"),
       description: z.string().describe("Descrição do saque"),
       externalId: z.string().describe("ID externo para identificação do saque"),
       method: z.string().describe("Método de pagamento (ex: PIX)"),
@@ -20,15 +19,15 @@ export function registerWithdrawTools(server: McpServer) {
       }).describe("Dados da chave PIX para o saque")
     },
     async (params) => {
-      const { apiKey, description, externalId, method, amount, pix } = params as any;
+      const { description, externalId, method, amount, pix } = params as any;
       
-      const finalApiKey = resolveApiKey(apiKey);
+      const finalApiKey = resolveApiKey();
       if (!finalApiKey) {
         return {
           content: [
             {
               type: "text",
-              text: "❌ Erro: API key é obrigatória. Forneça via parâmetro apiKey, configure via header HTTP, ou configure globalmente via variável de ambiente ABACATE_PAY_API_KEY."
+              text: "❌ Erro: API key é obrigatória. Configure via header HTTP ou configure globalmente via variável de ambiente ABACATE_PAY_API_KEY."
             }
           ]
         };
