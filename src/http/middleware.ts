@@ -7,13 +7,6 @@ import { apiKey } from "../config.js";
  * e adiciona ao request como validatedApiKey
  */
 export function validateApiKeyMiddleware(req: Request, res: Response, next: NextFunction) {
-  console.log(`[MIDDLEWARE] ${req.method} ${req.path}`);
-  console.log(`[MIDDLEWARE] Headers recebidos:`, {
-    authorization: req.headers.authorization ? 'Bearer ***' : 'não fornecido',
-    'x-api-key': req.headers['x-api-key'] ? '***' : 'não fornecido',
-    'mcp-session-id': req.headers['mcp-session-id'] || 'não fornecido'
-  });
-  
   // Extrai a API key do header Authorization (Bearer token) ou X-API-Key
   const authHeader = req.headers.authorization;
   const apiKeyHeader = req.headers['x-api-key'] as string | undefined;
@@ -22,10 +15,8 @@ export function validateApiKeyMiddleware(req: Request, res: Response, next: Next
   
   if (authHeader && authHeader.startsWith('Bearer ')) {
     requestApiKey = authHeader.substring(7);
-    console.log(`[MIDDLEWARE] API key extraída do header Authorization`);
   } else if (apiKeyHeader) {
     requestApiKey = apiKeyHeader;
-    console.log(`[MIDDLEWARE] API key extraída do header X-API-Key`);
   }
   
   // Se não há API key na requisição, usa a global
@@ -33,7 +24,6 @@ export function validateApiKeyMiddleware(req: Request, res: Response, next: Next
   
   // Valida se há pelo menos uma API key (global ou na requisição)
   if (!finalApiKey || finalApiKey.trim() === '') {
-    console.log(`[MIDDLEWARE] ❌ API key não encontrada - retornando 401`);
     res.status(401).json({
       jsonrpc: '2.0',
       error: {
@@ -44,8 +34,6 @@ export function validateApiKeyMiddleware(req: Request, res: Response, next: Next
     });
     return;
   }
-  
-  console.log(`[MIDDLEWARE] ✅ API key validada (${finalApiKey.substring(0, 10)}...)`);
   
   // Adiciona a API key validada ao request para uso posterior
   (req as any).validatedApiKey = finalApiKey;
