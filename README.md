@@ -16,6 +16,8 @@ Um servidor MCP (Model Context Protocol) para integração com a API do Abacate 
 
 ## 🚀 Instalação e Configuração
 
+> **💡 Dica**: Se você só precisa usar o servidor MCP via HTTP (AgentKit, n8n, etc.), não precisa instalar localmente! Use o servidor público em `https://mcp.abacatepay.com/mcp` - veja a seção [Uso Remoto e Automação](#-uso-remoto-e-automação).
+
 ### 1. Clone o repositório
 
 ```bash
@@ -133,10 +135,25 @@ X-API-Key: sua_api_key_aqui
 
 ## 🌐 Uso Remoto e Automação
 
+### 🚀 Servidor Público Disponível
+
+**✨ Servidor MCP já deployado e disponível!**
+
+Você pode usar o servidor MCP da Abacate Pay diretamente sem precisar instalar localmente:
+
+**Endpoint:** `https://mcp.abacatepay.com/mcp`
+
+Basta configurar sua API key no header `Authorization` ou `X-API-Key` e começar a usar!
+
 ### HTTP Server para Automação
 
-Para usar com ferramentas como n8n, Zapier, ou aplicações customizadas:
+Para usar com ferramentas como n8n, Zapier, ou aplicações customizadas, você pode:
 
+**Opção 1: Usar o servidor público (Recomendado)**
+- Endpoint: `https://mcp.abacatepay.com/mcp`
+- Sem necessidade de instalação ou configuração
+
+**Opção 2: Rodar localmente**
 ```bash
 # Start HTTP server
 bun run start:http
@@ -147,9 +164,9 @@ MCP_PORT=8080 bun run start:http
 
 ### Exemplo de Integração
 
-**HTTP Request (n8n/Zapier):**
+**HTTP Request (n8n/Zapier) - Usando servidor público:**
 ```bash
-POST https://your-server.com/mcp
+POST https://mcp.abacatepay.com/mcp
 Headers:
   Authorization: Bearer sua_api_key_aqui
   Content-Type: application/json
@@ -172,7 +189,7 @@ Body:
 **JavaScript/Node.js:**
 ```javascript
 async function createCustomer(customerData) {
-  const response = await fetch('https://your-mcp-server.com/mcp', {
+  const response = await fetch('https://mcp.abacatepay.com/mcp', {
     method: 'POST',
     headers: {
       'Authorization': 'Bearer sua_api_key_aqui',
