@@ -38,48 +38,25 @@ export function registerBillingTools(server: McpServer) {
         };
       }
       
-      try {
-        const requestBody: any = {
-          frequency,
-          methods,
-          products,
-          returnUrl,
-          completionUrl
-        };
+      const requestBody: any = {
+        frequency,
+        methods,
+        products,
+        returnUrl,
+        completionUrl
+      };
 
-        if (customerId) {
-          requestBody.customerId = customerId;
-        }
+      if (customerId) {
+        requestBody.customerId = customerId;
+      }
 
-        const response = await makeAbacatePayRequest<any>("/billing/create", finalApiKey, {
-          method: "POST",
-          body: JSON.stringify(requestBody)
-        });
+      const result = await makeAbacatePayRequest<any>("/billing/create", finalApiKey, {
+        method: "POST",
+        body: JSON.stringify(requestBody)
+      });
 
-        const data = response.data;
-        const totalAmount = (data.amount / 100).toFixed(2);
-        
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Cobrança criada com sucesso! 🎉\n\n` +
-                    `📋 **Detalhes da Cobrança:**\n` +
-                    `• ID: ${data.id}\n` +
-                    `• Status: ${data.status}\n` +
-                    `• Valor Total: R$ ${totalAmount}\n` +
-                    `• Frequência: ${data.frequency}\n` +
-                    `• Métodos: ${data.methods.join(', ')}\n` +
-                    `• Produtos: ${data.products.length} item(s)\n\n` +
-                    `🔗 **Link de Pagamento:**\n${data.url}\n\n` +
-                    `${data.devMode ? '⚠️ Modo de desenvolvimento ativo' : '✅ Modo de produção'}`
-            }
-          ]
-        };
-      } catch (error) {
-        const errorMessage = error instanceof Error 
-          ? formatHttpError(error)
-          : 'Erro desconhecido';
+      if (result.error) {
+        const errorMessage = formatHttpError(result.error);
         
         return {
           content: [
@@ -90,6 +67,38 @@ export function registerBillingTools(server: McpServer) {
           ]
         };
       }
+
+      const data = result.data?.data;
+      if (!data) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: "Erro: Resposta inválida da API"
+            }
+          ]
+        };
+      }
+
+      const totalAmount = (data.amount / 100).toFixed(2);
+      
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Cobrança criada com sucesso! 🎉\n\n` +
+                  `📋 **Detalhes da Cobrança:**\n` +
+                  `• ID: ${data.id}\n` +
+                  `• Status: ${data.status}\n` +
+                  `• Valor Total: R$ ${totalAmount}\n` +
+                  `• Frequência: ${data.frequency}\n` +
+                  `• Métodos: ${data.methods.join(', ')}\n` +
+                  `• Produtos: ${data.products.length} item(s)\n\n` +
+                  `🔗 **Link de Pagamento:**\n${data.url}\n\n` +
+                  `${data.devMode ? '⚠️ Modo de desenvolvimento ativo' : '✅ Modo de produção'}`
+          }
+        ]
+      };
     }
   );
 
@@ -114,57 +123,12 @@ export function registerBillingTools(server: McpServer) {
         };
       }
       
-      try {
-        const response = await makeAbacatePayRequest<any>("/billing/list", finalApiKey, {
-          method: "GET"
-        });
+      const result = await makeAbacatePayRequest<any>("/billing/list", finalApiKey, {
+        method: "GET"
+      });
 
-        if (!response.data || response.data.length === 0) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: "Nenhuma cobrança encontrada."
-              }
-            ]
-          };
-        }
-
-        const billingsList = response.data.map((billing: any, index: number) => {
-          const amount = (billing.amount / 100).toFixed(2);
-          const customer = billing.customer?.metadata;
-          
-          const statusEmojis: Record<string, string> = {
-            'PENDING': '⏳',
-            'PAID': '✅',
-            'EXPIRED': '⏰',
-            'CANCELLED': '❌',
-            'REFUNDED': '↩️'
-          };
-          const statusEmoji = statusEmojis[billing.status] || '❓';
-
-          return `${index + 1}. ${statusEmoji} **${billing.status}** - R$ ${amount}
-     📋 ID: ${billing.id}
-     🔗 URL: ${billing.url}
-     📦 Produtos: ${billing.products.length} item(s)
-     👤 Cliente: ${customer?.name || 'N/A'}
-     📅 Frequência: ${billing.frequency}
-     💳 Métodos: ${billing.methods.join(', ')}
-     ${billing.devMode ? '⚠️ Modo Dev' : '✅ Produção'}`;
-        }).join('\n\n');
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: `📋 **Lista de Cobranças** (${response.data.length} encontrada(s)):\n\n${billingsList}`
-            }
-          ]
-        };
-      } catch (error) {
-        const errorMessage = error instanceof Error 
-          ? formatHttpError(error)
-          : 'Erro desconhecido';
+      if (result.error) {
+        const errorMessage = formatHttpError(result.error);
         
         return {
           content: [
@@ -175,6 +139,49 @@ export function registerBillingTools(server: McpServer) {
           ]
         };
       }
+
+      if (!result.data?.data || result.data.data.length === 0) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: "Nenhuma cobrança encontrada."
+            }
+          ]
+        };
+      }
+
+      const billingsList = result.data.data.map((billing: any, index: number) => {
+        const amount = (billing.amount / 100).toFixed(2);
+        const customer = billing.customer?.metadata;
+        
+        const statusEmojis: Record<string, string> = {
+          'PENDING': '⏳',
+          'PAID': '✅',
+          'EXPIRED': '⏰',
+          'CANCELLED': '❌',
+          'REFUNDED': '↩️'
+        };
+        const statusEmoji = statusEmojis[billing.status] || '❓';
+
+        return `${index + 1}. ${statusEmoji} **${billing.status}** - R$ ${amount}
+     📋 ID: ${billing.id}
+     🔗 URL: ${billing.url}
+     📦 Produtos: ${billing.products.length} item(s)
+     👤 Cliente: ${customer?.name || 'N/A'}
+     📅 Frequência: ${billing.frequency}
+     💳 Métodos: ${billing.methods.join(', ')}
+     ${billing.devMode ? '⚠️ Modo Dev' : '✅ Produção'}`;
+      }).join('\n\n');
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `📋 **Lista de Cobranças** (${result.data.data.length} encontrada(s)):\n\n${billingsList}`
+          }
+        ]
+      };
     }
   );
 } 

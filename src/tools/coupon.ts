@@ -32,56 +32,29 @@ export function registerCouponTools(server: McpServer) {
         };
       }
       
-      try {
-        const requestBody: any = {
-          code,
-          discountKind,
-          discount,
-          maxRedeems
-        };
+      const requestBody: any = {
+        code,
+        discountKind,
+        discount,
+        maxRedeems
+      };
 
-        // Adicionar campos opcionais apenas se fornecidos
-        if (notes) {
-          requestBody.notes = notes;
-        }
+      // Adicionar campos opcionais apenas se fornecidos
+      if (notes) {
+        requestBody.notes = notes;
+      }
 
-        if (metadata) {
-          requestBody.metadata = metadata;
-        }
+      if (metadata) {
+        requestBody.metadata = metadata;
+      }
 
-        const response = await makeAbacatePayRequest<any>("/coupon/create", finalApiKey, {
-          method: "POST",
-          body: JSON.stringify(requestBody)
-        });
+      const result = await makeAbacatePayRequest<any>("/coupon/create", finalApiKey, {
+        method: "POST",
+        body: JSON.stringify(requestBody)
+      });
 
-        const data = response.data;
-        
-        const discountText = data.discountKind === 'PERCENTAGE' 
-          ? `${data.discount}%` 
-          : `R$ ${(data.discount / 100).toFixed(2)}`;
-        
-        const maxRedeemsText = data.maxRedeems === -1 
-          ? 'Ilimitado' 
-          : `${data.maxRedeems} vezes`;
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: `🎫 **Cupom criado com sucesso!**\n\n` +
-                    `📋 **Detalhes do Cupom:**\n` +
-                    `• Código: **${data.code}**\n` +
-                    `• Desconto: ${discountText} (${data.discountKind === 'PERCENTAGE' ? 'Porcentagem' : 'Valor Fixo'})\n` +
-                    `• Usos Máximos: ${maxRedeemsText}\n` +
-                    `• Descrição: ${data.notes || 'Sem descrição'}\n\n` +
-                    `✅ O cupom **${data.code}** está pronto para ser usado pelos seus clientes!`
-            }
-          ]
-        };
-      } catch (error) {
-        const errorMessage = error instanceof Error 
-          ? formatHttpError(error)
-          : 'Erro desconhecido';
+      if (result.error) {
+        const errorMessage = formatHttpError(result.error);
         
         return {
           content: [
@@ -92,6 +65,41 @@ export function registerCouponTools(server: McpServer) {
           ]
         };
       }
+
+      const data = result.data?.data;
+      if (!data) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: "Erro: Resposta inválida da API"
+            }
+          ]
+        };
+      }
+      
+      const discountText = data.discountKind === 'PERCENTAGE' 
+        ? `${data.discount}%` 
+        : `R$ ${(data.discount / 100).toFixed(2)}`;
+      
+      const maxRedeemsText = data.maxRedeems === -1 
+        ? 'Ilimitado' 
+        : `${data.maxRedeems} vezes`;
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `🎫 **Cupom criado com sucesso!**\n\n` +
+                  `📋 **Detalhes do Cupom:**\n` +
+                  `• Código: **${data.code}**\n` +
+                  `• Desconto: ${discountText} (${data.discountKind === 'PERCENTAGE' ? 'Porcentagem' : 'Valor Fixo'})\n` +
+                  `• Usos Máximos: ${maxRedeemsText}\n` +
+                  `• Descrição: ${data.notes || 'Sem descrição'}\n\n` +
+                  `✅ O cupom **${data.code}** está pronto para ser usado pelos seus clientes!`
+          }
+        ]
+      };
     }
   );
 
@@ -116,49 +124,12 @@ export function registerCouponTools(server: McpServer) {
         };
       }
       
-      try {
-        const response = await makeAbacatePayRequest<any>("/coupon/list", finalApiKey, {
-          method: "GET"
-        });
+      const result = await makeAbacatePayRequest<any>("/coupon/list", finalApiKey, {
+        method: "GET"
+      });
 
-        if (!response.data || response.data.length === 0) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: "Nenhum cupom encontrado."
-              }
-            ]
-          };
-        }
-
-        const couponsList = response.data.map((coupon: any, index: number) => {
-          const discountText = coupon.discountKind === 'PERCENTAGE' 
-            ? `${coupon.discount}%` 
-            : `R$ ${(coupon.discount / 100).toFixed(2)}`;
-          
-          const maxRedeemsText = coupon.maxRedeems === -1 
-            ? 'Ilimitado' 
-            : `${coupon.maxRedeems} vezes`;
-
-          return `${index + 1}. 🎫 **${coupon.code}**
-     💰 Desconto: ${discountText} (${coupon.discountKind === 'PERCENTAGE' ? 'Porcentagem' : 'Valor Fixo'})
-     🔄 Usos: ${maxRedeemsText}
-     📝 Descrição: ${coupon.notes || 'Sem descrição'}`;
-        }).join('\n\n');
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: `🎫 **Lista de Cupons** (${response.data.length} encontrado(s)):\n\n${couponsList}`
-            }
-          ]
-        };
-      } catch (error) {
-        const errorMessage = error instanceof Error 
-          ? formatHttpError(error)
-          : 'Erro desconhecido';
+      if (result.error) {
+        const errorMessage = formatHttpError(result.error);
         
         return {
           content: [
@@ -169,6 +140,41 @@ export function registerCouponTools(server: McpServer) {
           ]
         };
       }
+
+      if (!result.data?.data || result.data.data.length === 0) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: "Nenhum cupom encontrado."
+            }
+          ]
+        };
+      }
+
+      const couponsList = result.data.data.map((coupon: any, index: number) => {
+        const discountText = coupon.discountKind === 'PERCENTAGE' 
+          ? `${coupon.discount}%` 
+          : `R$ ${(coupon.discount / 100).toFixed(2)}`;
+        
+        const maxRedeemsText = coupon.maxRedeems === -1 
+          ? 'Ilimitado' 
+          : `${coupon.maxRedeems} vezes`;
+
+        return `${index + 1}. 🎫 **${coupon.code}**
+     💰 Desconto: ${discountText} (${coupon.discountKind === 'PERCENTAGE' ? 'Porcentagem' : 'Valor Fixo'})
+     🔄 Usos: ${maxRedeemsText}
+     📝 Descrição: ${coupon.notes || 'Sem descrição'}`;
+      }).join('\n\n');
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `🎫 **Lista de Cupons** (${result.data.data.length} encontrado(s)):\n\n${couponsList}`
+          }
+        ]
+      };
     }
   );
 } 

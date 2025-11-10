@@ -35,54 +35,29 @@ export function registerPixTools(server: McpServer) {
         };
       }
       
-      try {
-        const requestBody: any = {
-          amount
-        };
+      const requestBody: any = {
+        amount
+      };
 
-        if (expiresIn) {
-          requestBody.expiresIn = expiresIn;
-        }
+      if (expiresIn) {
+        requestBody.expiresIn = expiresIn;
+      }
 
-        if (description) {
-          requestBody.description = description;
-        }
+      if (description) {
+        requestBody.description = description;
+      }
 
-        if (customer) {
-          requestBody.customer = customer;
-        }
+      if (customer) {
+        requestBody.customer = customer;
+      }
 
-        const response = await makeAbacatePayRequest<any>("/pixQrCode/create", finalApiKey, {
-          method: "POST",
-          body: JSON.stringify(requestBody)
-        });
+      const result = await makeAbacatePayRequest<any>("/pixQrCode/create", finalApiKey, {
+        method: "POST",
+        body: JSON.stringify(requestBody)
+      });
 
-        const data = response.data;
-        const amountFormatted = (data.amount / 100).toFixed(2);
-        const feeFormatted = (data.platformFee / 100).toFixed(2);
-        
-        return {
-          content: [
-            {
-              type: "text",
-              text: `🎯 **QR Code PIX criado com sucesso!**\n\n` +
-                    `📋 **Detalhes:**\n` +
-                    `• ID: ${data.id}\n` +
-                    `• Valor: R$ ${amountFormatted}\n` +
-                    `• Status: ${data.status}\n` +
-                    `• Taxa da Plataforma: R$ ${feeFormatted}\n` +
-                    `• Criado em: ${new Date(data.createdAt).toLocaleString('pt-BR')}\n` +
-                    `• Expira em: ${new Date(data.expiresAt).toLocaleString('pt-BR')}\n\n` +
-                    `📱 **Código PIX (Copia e Cola):**\n\`\`\`\n${data.brCode}\n\`\`\`\n\n` +
-                    `🖼️ **QR Code Base64:**\n${data.brCodeBase64.substring(0, 100)}...\n\n` +
-                    `${data.devMode ? '⚠️ Modo de desenvolvimento ativo' : '✅ Modo de produção'}`
-            }
-          ]
-        };
-      } catch (error) {
-        const errorMessage = error instanceof Error 
-          ? formatHttpError(error)
-          : 'Erro desconhecido';
+      if (result.error) {
+        const errorMessage = formatHttpError(result.error);
         
         return {
           content: [
@@ -93,6 +68,40 @@ export function registerPixTools(server: McpServer) {
           ]
         };
       }
+
+      const data = result.data?.data;
+      if (!data) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: "Erro: Resposta inválida da API"
+            }
+          ]
+        };
+      }
+
+      const amountFormatted = (data.amount / 100).toFixed(2);
+      const feeFormatted = (data.platformFee / 100).toFixed(2);
+      
+      return {
+        content: [
+          {
+            type: "text",
+            text: `🎯 **QR Code PIX criado com sucesso!**\n\n` +
+                  `📋 **Detalhes:**\n` +
+                  `• ID: ${data.id}\n` +
+                  `• Valor: R$ ${amountFormatted}\n` +
+                  `• Status: ${data.status}\n` +
+                  `• Taxa da Plataforma: R$ ${feeFormatted}\n` +
+                  `• Criado em: ${new Date(data.createdAt).toLocaleString('pt-BR')}\n` +
+                  `• Expira em: ${new Date(data.expiresAt).toLocaleString('pt-BR')}\n\n` +
+                  `📱 **Código PIX (Copia e Cola):**\n\`\`\`\n${data.brCode}\n\`\`\`\n\n` +
+                  `🖼️ **QR Code Base64:**\n${data.brCodeBase64.substring(0, 100)}...\n\n` +
+                  `${data.devMode ? '⚠️ Modo de desenvolvimento ativo' : '✅ Modo de produção'}`
+          }
+        ]
+      };
     }
   );
 
@@ -119,53 +128,19 @@ export function registerPixTools(server: McpServer) {
         };
       }
       
-      try {
-        const requestBody: any = {};
+      const requestBody: any = {};
 
-        if (metadata) {
-          requestBody.metadata = metadata;
-        }
+      if (metadata) {
+        requestBody.metadata = metadata;
+      }
 
-        const response = await makeAbacatePayRequest<any>(`/pixQrCode/simulate-payment?id=${id}`, finalApiKey, {
-          method: "POST",
-          body: JSON.stringify(requestBody)
-        });
+      const result = await makeAbacatePayRequest<any>(`/pixQrCode/simulate-payment?id=${id}`, finalApiKey, {
+        method: "POST",
+        body: JSON.stringify(requestBody)
+      });
 
-        const data = response.data;
-        const amountFormatted = (data.amount / 100).toFixed(2);
-        const feeFormatted = (data.platformFee / 100).toFixed(2);
-        
-        const statusEmojis: Record<string, string> = {
-          'PENDING': '⏳',
-          'PAID': '✅',
-          'EXPIRED': '⏰',
-          'CANCELLED': '❌',
-          'REFUNDED': '↩️'
-        };
-        const statusEmoji = statusEmojis[data.status] || '❓';
-        
-        return {
-          content: [
-            {
-              type: "text",
-              text: `${statusEmoji} **Pagamento PIX simulado com sucesso!**\n\n` +
-                    `📋 **Detalhes do Pagamento:**\n` +
-                    `• ID: ${data.id}\n` +
-                    `• Status: ${data.status}\n` +
-                    `• Valor: R$ ${amountFormatted}\n` +
-                    `• Taxa da Plataforma: R$ ${feeFormatted}\n` +
-                    `• Criado em: ${new Date(data.createdAt).toLocaleString('pt-BR')}\n` +
-                    `• Atualizado em: ${new Date(data.updatedAt).toLocaleString('pt-BR')}\n` +
-                    `• Expira em: ${new Date(data.expiresAt).toLocaleString('pt-BR')}\n\n` +
-                    `${data.devMode ? '⚠️ Simulação realizada em modo de desenvolvimento' : '✅ Pagamento em produção'}\n\n` +
-                    `🎉 O pagamento foi processado com sucesso!`
-            }
-          ]
-        };
-      } catch (error) {
-        const errorMessage = error instanceof Error 
-          ? formatHttpError(error)
-          : 'Erro desconhecido';
+      if (result.error) {
+        const errorMessage = formatHttpError(result.error);
         
         return {
           content: [
@@ -176,6 +151,49 @@ export function registerPixTools(server: McpServer) {
           ]
         };
       }
+
+      const data = result.data?.data;
+      if (!data) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: "Erro: Resposta inválida da API"
+            }
+          ]
+        };
+      }
+
+      const amountFormatted = (data.amount / 100).toFixed(2);
+      const feeFormatted = (data.platformFee / 100).toFixed(2);
+      
+      const statusEmojis: Record<string, string> = {
+        'PENDING': '⏳',
+        'PAID': '✅',
+        'EXPIRED': '⏰',
+        'CANCELLED': '❌',
+        'REFUNDED': '↩️'
+      };
+      const statusEmoji = statusEmojis[data.status] || '❓';
+      
+      return {
+        content: [
+          {
+            type: "text",
+            text: `${statusEmoji} **Pagamento PIX simulado com sucesso!**\n\n` +
+                  `📋 **Detalhes do Pagamento:**\n` +
+                  `• ID: ${data.id}\n` +
+                  `• Status: ${data.status}\n` +
+                  `• Valor: R$ ${amountFormatted}\n` +
+                  `• Taxa da Plataforma: R$ ${feeFormatted}\n` +
+                  `• Criado em: ${new Date(data.createdAt).toLocaleString('pt-BR')}\n` +
+                  `• Atualizado em: ${new Date(data.updatedAt).toLocaleString('pt-BR')}\n` +
+                  `• Expira em: ${new Date(data.expiresAt).toLocaleString('pt-BR')}\n\n` +
+                  `${data.devMode ? '⚠️ Simulação realizada em modo de desenvolvimento' : '✅ Pagamento em produção'}\n\n` +
+                  `🎉 O pagamento foi processado com sucesso!`
+          }
+        ]
+      };
     }
   );
 
@@ -201,43 +219,12 @@ export function registerPixTools(server: McpServer) {
         };
       }
       
-      try {
-        const response = await makeAbacatePayRequest<any>(`/pixQrCode/check?id=${id}`, finalApiKey, {
-          method: "GET"
-        });
+      const result = await makeAbacatePayRequest<any>(`/pixQrCode/check?id=${id}`, finalApiKey, {
+        method: "GET"
+      });
 
-        const data = response.data;
-        
-        const statusEmojis: Record<string, string> = {
-          'PENDING': '⏳',
-          'PAID': '✅',
-          'EXPIRED': '⏰',
-          'CANCELLED': '❌',
-          'REFUNDED': '↩️'
-        };
-        const statusEmoji = statusEmojis[data.status] || '❓';
-        
-        return {
-          content: [
-            {
-              type: "text",
-              text: `${statusEmoji} **Status do QR Code PIX**\n\n` +
-                    `📋 **ID**: ${id}\n` +
-                    `📊 **Status**: ${data.status}\n` +
-                    `⏰ **Expira em**: ${new Date(data.expiresAt).toLocaleString('pt-BR')}\n\n` +
-                    `${data.status === 'PENDING' ? '⏳ Aguardando pagamento...' : 
-                      data.status === 'PAID' ? '✅ Pagamento confirmado!' :
-                      data.status === 'EXPIRED' ? '⏰ QR Code expirado' :
-                      data.status === 'CANCELLED' ? '❌ QR Code cancelado' :
-                      data.status === 'REFUNDED' ? '↩️ Pagamento estornado' : 
-                      '❓ Status desconhecido'}`
-            }
-          ]
-        };
-      } catch (error) {
-        const errorMessage = error instanceof Error 
-          ? formatHttpError(error)
-          : 'Erro desconhecido';
+      if (result.error) {
+        const errorMessage = formatHttpError(result.error);
         
         return {
           content: [
@@ -248,6 +235,45 @@ export function registerPixTools(server: McpServer) {
           ]
         };
       }
+
+      const data = result.data?.data;
+      if (!data) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: "Erro: Resposta inválida da API"
+            }
+          ]
+        };
+      }
+      
+      const statusEmojis: Record<string, string> = {
+        'PENDING': '⏳',
+        'PAID': '✅',
+        'EXPIRED': '⏰',
+        'CANCELLED': '❌',
+        'REFUNDED': '↩️'
+      };
+      const statusEmoji = statusEmojis[data.status] || '❓';
+      
+      return {
+        content: [
+          {
+            type: "text",
+            text: `${statusEmoji} **Status do QR Code PIX**\n\n` +
+                  `📋 **ID**: ${id}\n` +
+                  `📊 **Status**: ${data.status}\n` +
+                  `⏰ **Expira em**: ${new Date(data.expiresAt).toLocaleString('pt-BR')}\n\n` +
+                  `${data.status === 'PENDING' ? '⏳ Aguardando pagamento...' : 
+                    data.status === 'PAID' ? '✅ Pagamento confirmado!' :
+                    data.status === 'EXPIRED' ? '⏰ QR Code expirado' :
+                    data.status === 'CANCELLED' ? '❌ QR Code cancelado' :
+                    data.status === 'REFUNDED' ? '↩️ Pagamento estornado' : 
+                    '❓ Status desconhecido'}`
+          }
+        ]
+      };
     }
   );
 } 

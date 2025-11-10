@@ -32,47 +32,30 @@ export function registerCustomerTools(server: McpServer) {
         };
       }
       
-      try {
-        // Normaliza e formata os dados
-        const normalizedTaxId = normalizeTaxId(taxId);
-        const normalizedCellphone = normalizeCellphone(cellphone);
-        
-        // Prepara o corpo da requisição
-        const requestBody = {
-          name: name.trim(),
-          cellphone: normalizedCellphone,
-          email: email.trim().toLowerCase(),
-          taxId: normalizedTaxId
-        };
-        
-        const response = await makeAbacatePayRequest<any>("/customer/create", finalApiKey, {
-          method: "POST",
-          body: JSON.stringify(requestBody)
-        });
+      // Normaliza e formata os dados
+      const normalizedTaxId = normalizeTaxId(taxId);
+      const normalizedCellphone = normalizeCellphone(cellphone);
+      
+      // Prepara o corpo da requisição
+      const requestBody = {
+        name: name.trim(),
+        cellphone: normalizedCellphone,
+        email: email.trim().toLowerCase(),
+        taxId: normalizedTaxId
+      };
+      
+      const result = await makeAbacatePayRequest<any>("/customer/create", finalApiKey, {
+        method: "POST",
+        body: JSON.stringify(requestBody)
+      });
 
-        return {
-          content: [
-            {
-              type: "text",
-              text: `✅ Cliente criado com sucesso!\n\n` +
-                    `📋 Detalhes:\n` +
-                    `• ID: ${response.data?.id || 'N/A'}\n` +
-                    `• Nome: ${name}\n` +
-                    `• Email: ${email}\n` +
-                    `• Celular: ${formatCellphone(cellphone)}\n` +
-                    `• CPF/CNPJ: ${normalizedTaxId.length === 11 ? formatCPF(normalizedTaxId) : normalizedTaxId}`
-            }
-          ]
-        };
-      } catch (error) {
-        const errorMessage = error instanceof Error 
-          ? formatHttpError(error, {
-              name,
-              cellphone: normalizeCellphone(cellphone),
-              email,
-              taxId: normalizeTaxId(taxId)
-            })
-          : 'Erro desconhecido';
+      if (result.error) {
+        const errorMessage = formatHttpError(result.error, {
+          name,
+          cellphone: normalizedCellphone,
+          email,
+          taxId: normalizedTaxId
+        });
         
         return {
           content: [
@@ -83,6 +66,21 @@ export function registerCustomerTools(server: McpServer) {
           ]
         };
       }
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `✅ Cliente criado com sucesso!\n\n` +
+                  `📋 Detalhes:\n` +
+                  `• ID: ${result.data?.data?.id || 'N/A'}\n` +
+                  `• Nome: ${name}\n` +
+                  `• Email: ${email}\n` +
+                  `• Celular: ${formatCellphone(cellphone)}\n` +
+                  `• CPF/CNPJ: ${normalizedTaxId.length === 11 ? formatCPF(normalizedTaxId) : normalizedTaxId}`
+          }
+        ]
+      };
     }
   );
 
@@ -108,43 +106,12 @@ export function registerCustomerTools(server: McpServer) {
         };
       }
       
-      try {
-        const response = await makeAbacatePayRequest<any>("/customer/list", finalApiKey, {
-          method: "GET"
-        });
+      const result = await makeAbacatePayRequest<any>("/customer/list", finalApiKey, {
+        method: "GET"
+      });
 
-        if (!response.data || response.data.length === 0) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: "Nenhum cliente encontrado."
-              }
-            ]
-          };
-        }
-
-        const customersList = response.data.map((customer: any, index: number) => {
-          const metadata = customer.metadata || {};
-          return `${index + 1}. ID: ${customer.id}
-     Nome: ${metadata.name || 'N/A'}
-     Email: ${metadata.email || 'N/A'}
-     Celular: ${metadata.cellphone || 'N/A'}
-     CPF/CNPJ: ${metadata.taxId || 'N/A'}`;
-        }).join('\n\n');
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Lista de Clientes (${response.data.length} encontrado(s)):\n\n${customersList}`
-            }
-          ]
-        };
-      } catch (error) {
-        const errorMessage = error instanceof Error 
-          ? formatHttpError(error)
-          : 'Erro desconhecido';
+      if (result.error) {
+        const errorMessage = formatHttpError(result.error);
         
         return {
           content: [
@@ -155,6 +122,35 @@ export function registerCustomerTools(server: McpServer) {
           ]
         };
       }
+
+      if (!result.data?.data || result.data.data.length === 0) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: "Nenhum cliente encontrado."
+            }
+          ]
+        };
+      }
+
+      const customersList = result.data.data.map((customer: any, index: number) => {
+        const metadata = customer.metadata || {};
+        return `${index + 1}. ID: ${customer.id}
+     Nome: ${metadata.name || 'N/A'}
+     Email: ${metadata.email || 'N/A'}
+     Celular: ${metadata.cellphone || 'N/A'}
+     CPF/CNPJ: ${metadata.taxId || 'N/A'}`;
+      }).join('\n\n');
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Lista de Clientes (${result.data.data.length} encontrado(s)):\n\n${customersList}`
+          }
+        ]
+      };
     }
   );
 } 

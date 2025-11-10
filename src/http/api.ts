@@ -5,16 +5,18 @@ export async function makeAbacatePayRequest<T = any>(
   endpoint: string, 
   apiKey?: string,
   options: RequestInit = {}
-): Promise<T> {
+): Promise<{ data?: T; error?: Error }> {
   const url = `${ABACATE_PAY_API_BASE}${endpoint}`;
   
   // Resolve API key usando o helper centralizado
   const authKey = resolveApiKey(apiKey);
   if (!authKey) {
-    throw new Error(
-      "API key é obrigatória. Forneça via parâmetro apiKey, " +
-      "configure via header HTTP, ou configure globalmente via variável de ambiente ABACATE_PAY_API_KEY"
-    );
+    return {
+      error: new Error(
+        "API key é obrigatória. Forneça via parâmetro apiKey, " +
+        "configure via header HTTP, ou configure globalmente via variável de ambiente ABACATE_PAY_API_KEY"
+      )
+    };
   }
   
   const headers = {
@@ -31,8 +33,11 @@ export async function makeAbacatePayRequest<T = any>(
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`HTTP ${response.status}: ${errorText}`);
+    return {
+      error: new Error(`HTTP ${response.status}: ${errorText}`)
+    };
   }
 
-  return response.json();
+  const data = await response.json();
+  return { data };
 }

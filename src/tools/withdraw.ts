@@ -34,47 +34,21 @@ export function registerWithdrawTools(server: McpServer) {
         };
       }
       
-      try {
-        const requestBody = {
-          description,
-          externalId,
-          method,
-          amount,
-          pix
-        };
+      const requestBody = {
+        description,
+        externalId,
+        method,
+        amount,
+        pix
+      };
 
-        const response = await makeAbacatePayRequest<any>("/withdraw/create", finalApiKey, {
-          method: "POST",
-          body: JSON.stringify(requestBody)
-        });
+      const result = await makeAbacatePayRequest<any>("/withdraw/create", finalApiKey, {
+        method: "POST",
+        body: JSON.stringify(requestBody)
+      });
 
-        const data = response.data;
-        const amountFormatted = (data.amount / 100).toFixed(2);
-        const feeFormatted = (data.platformFee / 100).toFixed(2);
-        
-        return {
-          content: [
-            {
-              type: "text",
-              text: `💰 **Saque criado com sucesso!**\n\n` +
-                    `📋 **Detalhes:**\n` +
-                    `• ID: ${data.id}\n` +
-                    `• Status: ${data.status}\n` +
-                    `• Valor: R$ ${amountFormatted}\n` +
-                    `• Taxa da Plataforma: R$ ${feeFormatted}\n` +
-                    `• ID Externo: ${data.externalId}\n` +
-                    `• Tipo: ${data.kind}\n` +
-                    `• Criado em: ${new Date(data.createdAt).toLocaleString('pt-BR')}\n` +
-                    `• Atualizado em: ${new Date(data.updatedAt).toLocaleString('pt-BR')}\n\n` +
-                    `📄 **Comprovante:** ${data.receiptUrl}\n\n` +
-                    `${data.devMode ? '⚠️ Modo de desenvolvimento ativo' : '✅ Modo de produção'}`
-            }
-          ]
-        };
-      } catch (error) {
-        const errorMessage = error instanceof Error 
-          ? formatHttpError(error)
-          : 'Erro desconhecido';
+      if (result.error) {
+        const errorMessage = formatHttpError(result.error);
         
         return {
           content: [
@@ -85,6 +59,41 @@ export function registerWithdrawTools(server: McpServer) {
           ]
         };
       }
+
+      const data = result.data?.data;
+      if (!data) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: "Erro: Resposta inválida da API"
+            }
+          ]
+        };
+      }
+
+      const amountFormatted = (data.amount / 100).toFixed(2);
+      const feeFormatted = (data.platformFee / 100).toFixed(2);
+      
+      return {
+        content: [
+          {
+            type: "text",
+            text: `💰 **Saque criado com sucesso!**\n\n` +
+                  `📋 **Detalhes:**\n` +
+                  `• ID: ${data.id}\n` +
+                  `• Status: ${data.status}\n` +
+                  `• Valor: R$ ${amountFormatted}\n` +
+                  `• Taxa da Plataforma: R$ ${feeFormatted}\n` +
+                  `• ID Externo: ${data.externalId}\n` +
+                  `• Tipo: ${data.kind}\n` +
+                  `• Criado em: ${new Date(data.createdAt).toLocaleString('pt-BR')}\n` +
+                  `• Atualizado em: ${new Date(data.updatedAt).toLocaleString('pt-BR')}\n\n` +
+                  `📄 **Comprovante:** ${data.receiptUrl}\n\n` +
+                  `${data.devMode ? '⚠️ Modo de desenvolvimento ativo' : '✅ Modo de produção'}`
+          }
+        ]
+      };
     }
   );
 }

@@ -32,18 +32,4 @@ export function resolveApiKey(apiKey?: string): string | null {
   return null;
 }
 
-/**
- * Valida e retorna a API key ou lança erro se não encontrada
- */
-export function requireApiKey(apiKey?: string): string {
-  const resolved = resolveApiKey(apiKey);
-  if (!resolved) {
-    throw new Error(
-      "API key é obrigatória. Forneça via parâmetro apiKey, " +
-      "configure via header HTTP (Authorization: Bearer <key> ou X-API-Key: <key>), " +
-      "ou configure globalmente via variável de ambiente ABACATE_PAY_API_KEY"
-    );
-  }
-  return resolved;
-}
 

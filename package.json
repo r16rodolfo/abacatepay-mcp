@@ -6,9 +6,9 @@
   "type": "module",
   "scripts": {
     "start": "bun run src/index.ts",
-    "start:http": "bun run src/http/server.ts",
+    "start:http": "bun run src/http-server.ts",
     "dev": "bun --watch src/index.ts",
-    "dev:http": "bun --watch src/http/server.ts",
+    "dev:http": "bun --watch src/http-server.ts",
     "inspector": "bun run scripts/inspector.js",
     "lint": "eslint src/ scripts/ --ext .ts,.js",
     "lint:fix": "eslint src/ scripts/ --ext .ts,.js --fix",
