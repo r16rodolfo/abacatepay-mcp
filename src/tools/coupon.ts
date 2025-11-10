@@ -107,7 +107,7 @@ export function registerCouponTools(server: McpServer) {
     "Lista todos os cupons de desconto criados no Abacate Pay",
     {
     },
-    async (params) => {
+    async () => {
       const finalApiKey = resolveApiKey();
       if (!finalApiKey) {
         return {

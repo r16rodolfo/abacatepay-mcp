@@ -106,7 +106,7 @@ export function registerBillingTools(server: McpServer) {
     "Lista todas as cobranças criadas no Abacate Pay",
     {
     },
-    async (params) => {
+    async () => {
       const finalApiKey = resolveApiKey();
       if (!finalApiKey) {
         return {
