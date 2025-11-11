@@ -6,15 +6,6 @@ const argv = minimist(process.argv.slice(2));
 export const apiKey = argv.key || process.env.ABACATE_PAY_API_KEY;
 
 export function validateApiKey(): string {
-  if (!apiKey) {
-    console.error(
-      "⚠️  Chave de API não fornecida globalmente.\n" +
-      "O servidor suporta multi-tenancy e requer a chave de API em cada requisição.\n" +
-      "Para usar o modo legacy (chave global), configure:\n" +
-      "  1. --key sua_chave_aqui\n" +
-      "  2. Variável de ambiente ABACATE_PAY_API_KEY"
-    );
-  }
   return apiKey || '';
 }
 
@@ -25,13 +16,11 @@ const isMainModule = process.argv[1] && (
   process.argv[1].includes('abacatepay-mcp')
 );
 
-if (isMainModule && !process.env.NODE_ENV?.includes('test')) {
-  console.error("✅ Abacate Pay MCP Server iniciado com sucesso");
-  if (apiKey) {
-    console.error("🔑 Modo legacy ativo - API key global configurada");
-  } else {
-    console.error("🔐 Multi-tenancy ativo - API keys devem ser fornecidas em cada requisição");
-  }
+// Só mostra mensagem para stdio, não para HTTP (que tem seu próprio banner)
+const isStdioServer = isMainModule && process.argv[1]?.includes('index.ts');
+
+if (isStdioServer && !process.env.NODE_ENV?.includes('test')) {
+  console.log("🥑 Abacate Pay MCP Server rodando em stdio");
 }
 
 export const ABACATE_PAY_API_BASE = "https://api.abacatepay.com/v1";
