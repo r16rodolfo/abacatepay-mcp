@@ -12,9 +12,6 @@ const sessionContexts = new Map<string, SessionContext>();
 // Contexto da sessão atual (usado quando não há sessionId disponível)
 let currentSessionContext: SessionContext | null = null;
 
-// Session ID atual
-let currentSessionId: string | undefined = undefined;
-
 export function setSessionApiKey(sessionId: string | undefined, apiKey: string) {
   if (sessionId) {
     const context = sessionContexts.get(sessionId) || {};
@@ -46,12 +43,3 @@ export function getSessionApiKey(sessionId?: string): string | undefined {
 export function clearSessionContext(sessionId: string) {
   sessionContexts.delete(sessionId);
 }
-
-export function setCurrentSessionId(sessionId: string | undefined) {
-  currentSessionId = sessionId;
-}
-
-export function getCurrentSessionId(): string | undefined {
-  return currentSessionId;
-}
-

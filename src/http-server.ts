@@ -4,9 +4,8 @@ import type { Request, Response } from "express";
 import { randomUUID } from "node:crypto";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import { registerAllTools } from "./tools/index.js";
-import { setSessionApiKey, setCurrentSessionId, clearSessionContext } from "./context.js";
+import { setSessionApiKey, clearSessionContext } from "./context.js";
 import { validateApiKeyMiddleware } from "./http/middleware.js";
 
 function createServer(): McpServer {
@@ -43,7 +42,6 @@ async function main() {
     // Armazena a API key no contexto da sessão
     if (validatedApiKey) {
       setSessionApiKey(sessionId, validatedApiKey);
-      setCurrentSessionId(sessionId);
     }
     
     let transport: StreamableHTTPServerTransport;
@@ -53,12 +51,8 @@ async function main() {
       // Reuse existing transport
       // eslint-disable-next-line security/detect-object-injection
       transport = transports[sessionId];
-      // Atualiza a API key no contexto quando reutiliza transporte
-      if (validatedApiKey) {
-        setSessionApiKey(sessionId, validatedApiKey);
-        setCurrentSessionId(sessionId);
-      }
-    } else if (!sessionId && isInitializeRequest((req as any).body)) {
+      // @ts-ignore
+    } else if (!transports[sessionId]) {
       // New initialization request
       transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: () => randomUUID(),
@@ -67,10 +61,6 @@ async function main() {
           // eslint-disable-next-line security/detect-object-injection
           transports[initializedSessionId] = transport;
           // Armazena a API key quando a sessão é inicializada
-          if (validatedApiKey) {
-            setSessionApiKey(initializedSessionId, validatedApiKey);
-            setCurrentSessionId(initializedSessionId);
-          }
         },
         // DNS rebinding protection is disabled by default for backwards compatibility. If you are running this server
         // locally, make sure to set:
@@ -105,10 +95,6 @@ async function main() {
 
     // Define o contexto antes de processar a requisição
     // Isso garante que as ferramentas possam acessar a API key
-    if (validatedApiKey && transport.sessionId) {
-      setSessionApiKey(transport.sessionId, validatedApiKey);
-      setCurrentSessionId(transport.sessionId);
-    }
     
     // Handle the request
     await transport.handleRequest(req, res, (req as any).body);
