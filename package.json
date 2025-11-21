@@ -53,6 +53,7 @@
   "homepage": "https://github.com/AbacatePay/abacatepay-mcp#readme",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",
+    "@scalekit-sdk/node": "^2.1.7",
     "express": "^5.1.0",
     "minimist": "^1.2.8",
     "zod": "^3.25.30"

@@ -7,7 +7,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import { registerAllTools } from "./tools/index.js";
 import { setSessionApiKey, setCurrentSessionId, clearSessionContext } from "./context.js";
-import { validateApiKeyMiddleware } from "./http/middleware.js";
+import { validateApiKeyMiddleware, validateOAuthMiddleware, type RequestWithOAuth } from "./http/middleware.js";
 
 function createServer(): McpServer {
   const server = new McpServer({
@@ -28,7 +28,10 @@ async function main() {
   const app = express();
   app.use((express as any).json({ limit: '10mb' }));
 
-  // Aplica o middleware de autenticação em todas as rotas /mcp
+  // Aplica o middleware OAuth em todas as rotas (exceto /.well-known/)
+  app.use(validateOAuthMiddleware);
+
+  // Aplica o middleware de autenticação por API key em todas as rotas /mcp
   app.use('/mcp', validateApiKeyMiddleware);
 
   // Map to store transports by session ID
@@ -36,8 +39,9 @@ async function main() {
 
   // Handle POST requests for client-to-server communication
   app.post('/mcp', async (req: Request, res: Response) => {
-    // Armazena a API key validada no contexto da sessão
-    const validatedApiKey = (req as any).validatedApiKey;
+    // Obtém a API key do OAuth ou do middleware de API key (fallback)
+    const oauthReq = req as RequestWithOAuth;
+    const validatedApiKey = oauthReq.oauthApiKey || (req as any).validatedApiKey;
     const sessionId = req.headers['mcp-session-id'] as string | undefined;
     
     // Armazena a API key no contexto da sessão
@@ -137,6 +141,17 @@ async function main() {
 
   // Get port from environment or use default
   const port = parseInt(process.env.MCP_PORT || process.env.PORT || "3000");
+  
+  app.get('/.well-known/oauth-protected-resource/mcp', (req: Request, res: Response) => {
+    const metadataJson = process.env.METADATA_JSON_RESPONSE;
+  
+    if (metadataJson) {
+      res.status(200).json(JSON.parse(metadataJson));
+      return;
+    }
+    
+    res.status(404).json({ error: 'METADATA_JSON_RESPONSE not found' });
+  });
 
   app.listen(port, () => {
     console.log("\n╔═══════════════════════════════════════════════════════╗");
