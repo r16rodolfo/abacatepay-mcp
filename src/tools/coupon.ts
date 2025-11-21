@@ -19,7 +19,7 @@ export function registerCouponTools(server: McpServer) {
     async (params) => {
       const { code, discountKind, discount, notes, maxRedeems, metadata } = params as any;
       
-      const finalApiKey = resolveApiKey();
+      const finalApiKey = resolveApiKey(server.sessionId as string);
       if (!finalApiKey) {
         return {
           content: [

@@ -22,7 +22,7 @@ export function registerPixTools(server: McpServer) {
     async (params) => {
       const { amount, expiresIn, description, customer } = params as any;
       
-      const finalApiKey = resolveApiKey();
+      const finalApiKey = resolveApiKey(server.sessionId as string);
       if (!finalApiKey) {
         return {
           content: [

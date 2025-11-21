@@ -1,5 +1,5 @@
 import { validateApiKey } from "../config.js";
-import { getSessionApiKey, getCurrentSessionId } from "../context.js";
+import { getSessionApiKey } from "../context.js";
 
 /**
  * Resolve a API key na seguinte ordem de prioridade:
@@ -10,7 +10,7 @@ import { getSessionApiKey, getCurrentSessionId } from "../context.js";
  * @param apiKey - API key opcional fornecida como parâmetro
  * @returns API key resolvida ou null se não encontrada
  */
-export function resolveApiKey(apiKey?: string): string | null {
+export function resolveApiKey(sessionId: string, apiKey?: string): string | null {
   // 1. Prioridade: parâmetro fornecido (mas ignora valores placeholder/inválidos)
   if (apiKey && apiKey.trim() !== '') {
     // Ignora valores placeholder comuns que indicam que o usuário não forneceu uma chave real
@@ -32,7 +32,6 @@ export function resolveApiKey(apiKey?: string): string | null {
   }
   
   // 2. Prioridade: contexto da sessão
-  const sessionId = getCurrentSessionId();
   const sessionApiKey = getSessionApiKey(sessionId);
   
   if (sessionApiKey && sessionApiKey.trim() !== '') {

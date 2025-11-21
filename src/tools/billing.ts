@@ -25,7 +25,7 @@ export function registerBillingTools(server: McpServer) {
     async (params) => {
       const { frequency, methods, products, returnUrl, completionUrl, customerId } = params as any;
       
-      const finalApiKey = resolveApiKey();
+      const finalApiKey = resolveApiKey(server.sessionId as string);
       if (!finalApiKey) {
         return {
           content: [
@@ -107,7 +107,7 @@ export function registerBillingTools(server: McpServer) {
     {
     },
     async () => {
-      const finalApiKey = resolveApiKey();
+      const finalApiKey = resolveApiKey(server.sessionId as string);
       if (!finalApiKey) {
         return {
           content: [

@@ -3,13 +3,14 @@ import { resolveApiKey } from "../utils/api-key.js";
 
 export async function makeAbacatePayRequest<T = any>(
   endpoint: string, 
+  sessionId: string,
   apiKey?: string,
   options: RequestInit = {}
 ): Promise<{ data?: T; error?: Error }> {
   const url = `${ABACATE_PAY_API_BASE}${endpoint}`;
   
   // Resolve API key usando o helper centralizado
-  const authKey = resolveApiKey(apiKey);
+  const authKey = resolveApiKey(sessionId, apiKey);
   if (!authKey) {
     return {
       error: new Error(

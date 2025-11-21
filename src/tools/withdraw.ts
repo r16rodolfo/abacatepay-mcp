@@ -21,7 +21,7 @@ export function registerWithdrawTools(server: McpServer) {
     async (params) => {
       const { description, externalId, method, amount, pix } = params as any;
       
-      const finalApiKey = resolveApiKey();
+      const finalApiKey = resolveApiKey(server.sessionId as string);
       if (!finalApiKey) {
         return {
           content: [

@@ -19,7 +19,7 @@ export function registerCustomerTools(server: McpServer) {
       const { name, cellphone, email, taxId } = params as any;
       
       // Resolve API key usando helper centralizado
-      const finalApiKey = resolveApiKey();
+      const finalApiKey = resolveApiKey(server.sessionId as string);
       if (!finalApiKey) {
         return {
           content: [

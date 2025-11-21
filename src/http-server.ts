@@ -7,6 +7,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { registerAllTools } from "./tools/index.js";
 import { setSessionApiKey, clearSessionContext } from "./context.js";
 import { validateApiKeyMiddleware } from "./http/middleware.js";
+import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 
 function createServer(): McpServer {
   const server = new McpServer({
@@ -52,7 +53,8 @@ async function main() {
       // eslint-disable-next-line security/detect-object-injection
       transport = transports[sessionId];
       // @ts-ignore
-    } else if (!transports[sessionId]) {
+    } else if (!transports[sessionId] && isInitializeRequest((req as any).body)) {
+      console.log('new initialization request');
       // New initialization request
       transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: () => randomUUID(),
@@ -77,6 +79,8 @@ async function main() {
       };
 
       const server = createServer();
+      // @ts-ignore
+      server.sessionId = sessionId;
 
       // Connect to the MCP server
       await server.connect(transport);
