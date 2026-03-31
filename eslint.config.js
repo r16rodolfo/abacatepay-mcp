@@ -19,6 +19,8 @@ export default [
         __filename: 'readonly',
         fetch: 'readonly',
         RequestInit: 'readonly',
+        HeadersInit: 'readonly',
+        URLSearchParams: 'readonly',
         Response: 'readonly'
       }
     },
