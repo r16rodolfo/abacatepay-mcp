@@ -21,7 +21,7 @@ export function registerV2ProductTools(server: McpServer) {
         .optional()
         .describe("Null ou omitido = produto avulso"),
     },
-    async (params) => {
+    async (params, extra) => {
       const p = params as any;
       try {
         const body: Record<string, unknown> = {
@@ -38,6 +38,7 @@ export function registerV2ProductTools(server: McpServer) {
           version: "v2",
           path: "/products/create",
           apiKey: p.apiKey,
+          sessionId: extra.sessionId,
           method: "POST",
           body: JSON.stringify(body),
         });
@@ -63,7 +64,7 @@ export function registerV2ProductTools(server: McpServer) {
       externalId: z.string().optional(),
       status: z.enum(["ACTIVE", "INACTIVE"]).optional(),
     },
-    async (params) => {
+    async (params, extra) => {
       const p = params as any;
       try {
         const res = await makeAbacatePayRequest<any>({
@@ -77,6 +78,7 @@ export function registerV2ProductTools(server: McpServer) {
             status: p.status,
           })}`,
           apiKey: p.apiKey,
+          sessionId: extra.sessionId,
           method: "GET",
         });
         const rows =
@@ -97,13 +99,14 @@ export function registerV2ProductTools(server: McpServer) {
       id: z.string().optional(),
       externalId: z.string().optional(),
     },
-    async (params) => {
+    async (params, extra) => {
       const p = params as any;
       try {
         const res = await makeAbacatePayRequest<any>({
           version: "v2",
           path: `/products/get${buildQuery({ id: p.id, externalId: p.externalId })}`,
           apiKey: p.apiKey,
+          sessionId: extra.sessionId,
           method: "GET",
         });
         return { content: [{ type: "text", text: JSON.stringify(res.data, null, 2) }] };
@@ -120,13 +123,14 @@ export function registerV2ProductTools(server: McpServer) {
       apiKey: v2ApiKey,
       id: z.string(),
     },
-    async (params) => {
+    async (params, extra) => {
       const p = params as any;
       try {
         const res = await makeAbacatePayRequest<any>({
           version: "v2",
           path: `/products/delete${buildQuery({ id: p.id })}`,
           apiKey: p.apiKey,
+          sessionId: extra.sessionId,
           method: "POST",
           body: "{}",
         });

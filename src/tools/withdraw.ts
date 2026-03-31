@@ -17,14 +17,16 @@ export function registerWithdrawTools(server: McpServer) {
       apiKey: z
         .string()
         .optional()
-        .describe("Chave de API v1 (opcional se ABACATE_PAY_API_KEY configurada)"),
+        .describe(
+          "Override opcional. Em HTTP multi-tenant prefira Authorization ou X-API-Key; em stdio use ABACATE_PAY_API_KEY."
+        ),
       description: z.string().optional().describe("Descrição opcional do saque"),
       externalId: z.string().describe("ID externo único do saque no seu sistema"),
       method: z.literal("PIX").describe("Método de saque (apenas PIX na API v1)"),
       amount: z.number().describe("Valor do saque em centavos (mín. 350)"),
       pix: pixKeySchema.describe("Chave PIX de destino"),
     },
-    async (params) => {
+    async (params, extra) => {
       const { apiKey, description, externalId, method, amount, pix } = params as any;
       try {
         const requestBody: Record<string, unknown> = {
@@ -41,6 +43,7 @@ export function registerWithdrawTools(server: McpServer) {
           version: "v1",
           path: "/withdraw/create",
           apiKey,
+          sessionId: extra.sessionId,
           method: "POST",
           body: JSON.stringify(requestBody),
         });
@@ -89,15 +92,18 @@ export function registerWithdrawTools(server: McpServer) {
       apiKey: z
         .string()
         .optional()
-        .describe("Chave de API v1 (opcional se ABACATE_PAY_API_KEY configurada)"),
+        .describe(
+          "Override opcional. Em HTTP multi-tenant prefira Authorization ou X-API-Key; em stdio use ABACATE_PAY_API_KEY."
+        ),
     },
-    async (params) => {
+    async (params, extra) => {
       const { apiKey } = params as any;
       try {
         const response = await makeAbacatePayRequest<any>({
           version: "v1",
           path: "/withdraw/list",
           apiKey,
+          sessionId: extra.sessionId,
           method: "GET",
         });
 
@@ -140,16 +146,19 @@ export function registerWithdrawTools(server: McpServer) {
       apiKey: z
         .string()
         .optional()
-        .describe("Chave de API v1 (opcional se ABACATE_PAY_API_KEY configurada)"),
+        .describe(
+          "Override opcional. Em HTTP multi-tenant prefira Authorization ou X-API-Key; em stdio use ABACATE_PAY_API_KEY."
+        ),
       externalId: z.string().describe("Identificador externo do saque no seu sistema"),
     },
-    async (params) => {
+    async (params, extra) => {
       const { apiKey, externalId } = params as any;
       try {
         const response = await makeAbacatePayRequest<any>({
           version: "v1",
           path: `/withdraw/get?externalId=${encodeURIComponent(externalId)}`,
           apiKey,
+          sessionId: extra.sessionId,
           method: "GET",
         });
 

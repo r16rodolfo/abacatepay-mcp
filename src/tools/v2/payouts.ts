@@ -13,7 +13,7 @@ export function registerV2PayoutTools(server: McpServer) {
       externalId: z.string(),
       description: z.string().optional(),
     },
-    async (params) => {
+    async (params, extra) => {
       const p = params as any;
       try {
         const body: Record<string, unknown> = {
@@ -26,6 +26,7 @@ export function registerV2PayoutTools(server: McpServer) {
           version: "v2",
           path: "/payouts/create",
           apiKey: p.apiKey,
+          sessionId: extra.sessionId,
           method: "POST",
           body: JSON.stringify(body),
         });
@@ -51,13 +52,14 @@ export function registerV2PayoutTools(server: McpServer) {
       apiKey: v2ApiKey,
       externalId: z.string(),
     },
-    async (params) => {
+    async (params, extra) => {
       const p = params as any;
       try {
         const res = await makeAbacatePayRequest<any>({
           version: "v2",
           path: `/payouts/get${buildQuery({ externalId: p.externalId })}`,
           apiKey: p.apiKey,
+          sessionId: extra.sessionId,
           method: "GET",
         });
         return { content: [{ type: "text", text: JSON.stringify(res.data, null, 2) }] };
@@ -79,7 +81,7 @@ export function registerV2PayoutTools(server: McpServer) {
       externalId: z.string().optional(),
       status: z.enum(["PENDING", "EXPIRED", "CANCELLED", "COMPLETE", "REFUNDED"]).optional(),
     },
-    async (params) => {
+    async (params, extra) => {
       const p = params as any;
       try {
         const res = await makeAbacatePayRequest<any>({
@@ -93,6 +95,7 @@ export function registerV2PayoutTools(server: McpServer) {
             status: p.status,
           })}`,
           apiKey: p.apiKey,
+          sessionId: extra.sessionId,
           method: "GET",
         });
         const rows =

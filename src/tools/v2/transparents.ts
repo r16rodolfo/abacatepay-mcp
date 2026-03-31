@@ -24,7 +24,7 @@ export function registerV2TransparentTools(server: McpServer) {
       customer: customerBlock.optional(),
       metadata: z.record(z.unknown()).optional(),
     },
-    async (params) => {
+    async (params, extra) => {
       const p = params as any;
       try {
         const dataBody: Record<string, unknown> = { amount: p.amount };
@@ -37,6 +37,7 @@ export function registerV2TransparentTools(server: McpServer) {
           version: "v2",
           path: "/transparents/create",
           apiKey: p.apiKey,
+          sessionId: extra.sessionId,
           method: "POST",
           body: JSON.stringify({ method: "PIX", data: dataBody }),
         });
@@ -64,13 +65,14 @@ export function registerV2TransparentTools(server: McpServer) {
       apiKey: v2ApiKey,
       id: z.string(),
     },
-    async (params) => {
+    async (params, extra) => {
       const p = params as any;
       try {
         const res = await makeAbacatePayRequest<any>({
           version: "v2",
           path: `/transparents/check${buildQuery({ id: p.id })}`,
           apiKey: p.apiKey,
+          sessionId: extra.sessionId,
           method: "GET",
         });
         const d = res.data;
@@ -96,13 +98,14 @@ export function registerV2TransparentTools(server: McpServer) {
       id: z.string(),
       metadata: z.record(z.unknown()).optional(),
     },
-    async (params) => {
+    async (params, extra) => {
       const p = params as any;
       try {
         const res = await makeAbacatePayRequest<any>({
           version: "v2",
           path: `/transparents/simulate-payment${buildQuery({ id: p.id })}`,
           apiKey: p.apiKey,
+          sessionId: extra.sessionId,
           method: "POST",
           body: JSON.stringify({ metadata: p.metadata ?? {} }),
         });
@@ -126,7 +129,7 @@ export function registerV2TransparentTools(server: McpServer) {
         .enum(["PENDING", "EXPIRED", "CANCELLED", "PAID", "REFUNDED"])
         .optional(),
     },
-    async (params) => {
+    async (params, extra) => {
       const p = params as any;
       try {
         const res = await makeAbacatePayRequest<any>({
@@ -139,6 +142,7 @@ export function registerV2TransparentTools(server: McpServer) {
             status: p.status,
           })}`,
           apiKey: p.apiKey,
+          sessionId: extra.sessionId,
           method: "GET",
         });
         const rows =

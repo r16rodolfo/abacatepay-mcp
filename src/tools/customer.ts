@@ -10,19 +10,22 @@ export function registerCustomerTools(server: McpServer) {
       apiKey: z
         .string()
         .optional()
-        .describe("Chave de API v1 (opcional se ABACATE_PAY_API_KEY configurada)"),
+        .describe(
+          "Override opcional. Em HTTP multi-tenant prefira Authorization ou X-API-Key; em stdio use ABACATE_PAY_API_KEY."
+        ),
       name: z.string().describe("Nome completo do cliente"),
       cellphone: z.string().describe("Celular do cliente (ex: (11) 4002-8922)"),
       email: z.string().email().describe("E-mail do cliente"),
       taxId: z.string().describe("CPF ou CNPJ válido do cliente (ex: 123.456.789-01)"),
     },
-    async (params) => {
+    async (params, extra) => {
       const { apiKey, name, cellphone, email, taxId } = params as any;
       try {
         const response = await makeAbacatePayRequest<any>({
           version: "v1",
           path: "/customer/create",
           apiKey,
+          sessionId: extra.sessionId,
           method: "POST",
           body: JSON.stringify({
             name,
@@ -60,15 +63,18 @@ export function registerCustomerTools(server: McpServer) {
       apiKey: z
         .string()
         .optional()
-        .describe("Chave de API v1 (opcional se ABACATE_PAY_API_KEY configurada)"),
+        .describe(
+          "Override opcional. Em HTTP multi-tenant prefira Authorization ou X-API-Key; em stdio use ABACATE_PAY_API_KEY."
+        ),
     },
-    async (params) => {
+    async (params, extra) => {
       const { apiKey } = params as any;
       try {
         const response = await makeAbacatePayRequest<any>({
           version: "v1",
           path: "/customer/list",
           apiKey,
+          sessionId: extra.sessionId,
           method: "GET",
         });
 

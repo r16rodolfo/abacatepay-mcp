@@ -10,7 +10,9 @@ export function registerPixTools(server: McpServer) {
       apiKey: z
         .string()
         .optional()
-        .describe("Chave de API v1 (opcional se ABACATE_PAY_API_KEY configurada)"),
+        .describe(
+          "Override opcional. Em HTTP multi-tenant prefira Authorization ou X-API-Key; em stdio use ABACATE_PAY_API_KEY."
+        ),
       amount: z.number().describe("Valor da cobrança em centavos"),
       expiresIn: z.number().optional().describe("Tempo de expiração em segundos (opcional)"),
       description: z
@@ -29,7 +31,7 @@ export function registerPixTools(server: McpServer) {
         .optional()
         .describe("Dados do cliente (opcional; se informar, todos os campos são obrigatórios)"),
     },
-    async (params) => {
+    async (params, extra) => {
       const { apiKey, amount, expiresIn, description, customer } = params as any;
       try {
         const requestBody: Record<string, unknown> = {
@@ -52,6 +54,7 @@ export function registerPixTools(server: McpServer) {
           version: "v1",
           path: "/pixQrCode/create",
           apiKey,
+          sessionId: extra.sessionId,
           method: "POST",
           body: JSON.stringify(requestBody),
         });
@@ -99,11 +102,13 @@ export function registerPixTools(server: McpServer) {
       apiKey: z
         .string()
         .optional()
-        .describe("Chave de API v1 (opcional se ABACATE_PAY_API_KEY configurada)"),
+        .describe(
+          "Override opcional. Em HTTP multi-tenant prefira Authorization ou X-API-Key; em stdio use ABACATE_PAY_API_KEY."
+        ),
       id: z.string().describe("ID do QR Code PIX para simular o pagamento"),
       metadata: z.record(z.unknown()).optional().describe("Metadados opcionais para a requisição"),
     },
-    async (params) => {
+    async (params, extra) => {
       const { apiKey, id, metadata } = params as any;
       try {
         const requestBody: Record<string, unknown> = {};
@@ -116,6 +121,7 @@ export function registerPixTools(server: McpServer) {
           version: "v1",
           path: `/pixQrCode/simulate-payment?id=${encodeURIComponent(id)}`,
           apiKey,
+          sessionId: extra.sessionId,
           method: "POST",
           body: JSON.stringify(requestBody),
         });
@@ -172,16 +178,19 @@ export function registerPixTools(server: McpServer) {
       apiKey: z
         .string()
         .optional()
-        .describe("Chave de API v1 (opcional se ABACATE_PAY_API_KEY configurada)"),
+        .describe(
+          "Override opcional. Em HTTP multi-tenant prefira Authorization ou X-API-Key; em stdio use ABACATE_PAY_API_KEY."
+        ),
       id: z.string().describe("ID do QR Code PIX para verificar o status"),
     },
-    async (params) => {
+    async (params, extra) => {
       const { apiKey, id } = params as any;
       try {
         const response = await makeAbacatePayRequest<any>({
           version: "v1",
           path: `/pixQrCode/check?id=${encodeURIComponent(id)}`,
           apiKey,
+          sessionId: extra.sessionId,
           method: "GET",
         });
 

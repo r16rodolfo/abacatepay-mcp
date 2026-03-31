@@ -25,7 +25,9 @@ const isMainModule = process.argv[1] && (
   process.argv[1].includes('abacatepay-mcp')
 );
 
-if (isMainModule && !process.env.NODE_ENV?.includes('test')) {
+const isHttpServerEntry = Boolean(process.argv[1]?.includes("http-server"));
+
+if (isMainModule && !isHttpServerEntry && !process.env.NODE_ENV?.includes('test')) {
   console.error("✅ Abacate Pay MCP Server iniciado com sucesso");
   if (apiKey) {
     console.error("🔑 Modo legacy ativo - API key global configurada");

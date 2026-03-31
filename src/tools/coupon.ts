@@ -10,7 +10,9 @@ export function registerCouponTools(server: McpServer) {
       apiKey: z
         .string()
         .optional()
-        .describe("Chave de API v1 (opcional se ABACATE_PAY_API_KEY configurada)"),
+        .describe(
+          "Override opcional. Em HTTP multi-tenant prefira Authorization ou X-API-Key; em stdio use ABACATE_PAY_API_KEY."
+        ),
       code: z.string().describe("Código único do cupom (ex: DESCONTO20)"),
       discountKind: z
         .enum(["PERCENTAGE", "FIXED"])
@@ -20,7 +22,7 @@ export function registerCouponTools(server: McpServer) {
       maxRedeems: z.number().default(-1).describe("Quantidade máxima de usos (-1 para ilimitado)"),
       metadata: z.record(z.unknown()).optional().describe("Metadados adicionais do cupom"),
     },
-    async (params) => {
+    async (params, extra) => {
       const { apiKey, code, discountKind, discount, notes, maxRedeems, metadata } = params as any;
       try {
         const requestBody: Record<string, unknown> = {
@@ -39,6 +41,7 @@ export function registerCouponTools(server: McpServer) {
           version: "v1",
           path: "/coupon/create",
           apiKey,
+          sessionId: extra.sessionId,
           method: "POST",
           body: JSON.stringify(requestBody),
         });
@@ -87,15 +90,18 @@ export function registerCouponTools(server: McpServer) {
       apiKey: z
         .string()
         .optional()
-        .describe("Chave de API v1 (opcional se ABACATE_PAY_API_KEY configurada)"),
+        .describe(
+          "Override opcional. Em HTTP multi-tenant prefira Authorization ou X-API-Key; em stdio use ABACATE_PAY_API_KEY."
+        ),
     },
-    async (params) => {
+    async (params, extra) => {
       const { apiKey } = params as any;
       try {
         const response = await makeAbacatePayRequest<any>({
           version: "v1",
           path: "/coupon/list",
           apiKey,
+          sessionId: extra.sessionId,
           method: "GET",
         });
 

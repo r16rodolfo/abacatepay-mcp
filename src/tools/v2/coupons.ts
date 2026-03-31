@@ -16,7 +16,7 @@ export function registerV2CouponTools(server: McpServer) {
       maxRedeems: z.number().optional(),
       metadata: z.record(z.unknown()).optional(),
     },
-    async (params) => {
+    async (params, extra) => {
       const p = params as any;
       try {
         const body: Record<string, unknown> = {
@@ -32,6 +32,7 @@ export function registerV2CouponTools(server: McpServer) {
           version: "v2",
           path: "/coupons/create",
           apiKey: p.apiKey,
+          sessionId: extra.sessionId,
           method: "POST",
           body: JSON.stringify(body),
         });
@@ -56,7 +57,7 @@ export function registerV2CouponTools(server: McpServer) {
       id: z.string().optional(),
       status: z.enum(["ACTIVE", "INACTIVE", "EXPIRED"]).optional(),
     },
-    async (params) => {
+    async (params, extra) => {
       const p = params as any;
       try {
         const res = await makeAbacatePayRequest<any>({
@@ -69,6 +70,7 @@ export function registerV2CouponTools(server: McpServer) {
             status: p.status,
           })}`,
           apiKey: p.apiKey,
+          sessionId: extra.sessionId,
           method: "GET",
         });
         const rows =
@@ -88,13 +90,14 @@ export function registerV2CouponTools(server: McpServer) {
       apiKey: v2ApiKey,
       id: z.string().optional(),
     },
-    async (params) => {
+    async (params, extra) => {
       const p = params as any;
       try {
         const res = await makeAbacatePayRequest<any>({
           version: "v2",
           path: `/coupons/get${buildQuery({ id: p.id })}`,
           apiKey: p.apiKey,
+          sessionId: extra.sessionId,
           method: "GET",
         });
         return { content: [{ type: "text", text: JSON.stringify(res.data, null, 2) }] };
@@ -111,13 +114,14 @@ export function registerV2CouponTools(server: McpServer) {
       apiKey: v2ApiKey,
       id: z.string(),
     },
-    async (params) => {
+    async (params, extra) => {
       const p = params as any;
       try {
         const res = await makeAbacatePayRequest<any>({
           version: "v2",
           path: `/coupons/delete${buildQuery({ id: p.id })}`,
           apiKey: p.apiKey,
+          sessionId: extra.sessionId,
           method: "POST",
           body: "{}",
         });
@@ -135,13 +139,14 @@ export function registerV2CouponTools(server: McpServer) {
       apiKey: v2ApiKey,
       id: z.string(),
     },
-    async (params) => {
+    async (params, extra) => {
       const p = params as any;
       try {
         const res = await makeAbacatePayRequest<any>({
           version: "v2",
           path: `/coupons/toggle${buildQuery({ id: p.id })}`,
           apiKey: p.apiKey,
+          sessionId: extra.sessionId,
           method: "POST",
           body: "{}",
         });

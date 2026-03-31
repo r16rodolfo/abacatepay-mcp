@@ -4,7 +4,7 @@ export const v2ApiKey = z
   .string()
   .optional()
   .describe(
-    "Chave de API AbacatePay **v2** (opcional se ABACATE_PAY_API_KEY for uma chave v2)."
+    "Override opcional (chave v2). Em HTTP multi-tenant prefira Authorization ou X-API-Key; em stdio use uma chave v2 em ABACATE_PAY_API_KEY."
   );
 
 export type V2Pagination = {

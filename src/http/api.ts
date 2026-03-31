@@ -1,9 +1,9 @@
 import {
-  validateApiKey,
   ABACATE_PAY_API_BASE_V1,
   ABACATE_PAY_API_BASE_V2,
   USER_AGENT,
 } from "../config.js";
+import { resolveApiKey } from "../utils/api-key.js";
 
 export type ApiVersion = "v1" | "v2";
 
@@ -38,6 +38,8 @@ export type MakeAbacatePayRequestOptions = {
   version: ApiVersion;
   path: string;
   apiKey?: string;
+  /** MCP streamable session id (HTTP); stdio typically omits. */
+  sessionId?: string;
 } & Omit<RequestInit, "headers"> & {
     headers?: HeadersInit;
   };
@@ -45,10 +47,21 @@ export type MakeAbacatePayRequestOptions = {
 export async function makeAbacatePayRequest<T = unknown>(
   options: MakeAbacatePayRequestOptions
 ): Promise<T> {
-  const { version, path, apiKey: apiKeyOverride, headers: userHeaders, ...fetchInit } =
-    options;
+  const {
+    version,
+    path,
+    apiKey: apiKeyOverride,
+    sessionId,
+    headers: userHeaders,
+    ...fetchInit
+  } = options;
   const url = `${getBaseUrl(version)}${normalizePath(path)}`;
-  const authKey = apiKeyOverride ?? validateApiKey();
+  const authKey = resolveApiKey(sessionId, apiKeyOverride);
+  if (!authKey) {
+    throw new Error(
+      "API key é obrigatória. No HTTP, use Authorization: Bearer ou X-API-Key; em stdio use ABACATE_PAY_API_KEY ou --key; opcionalmente passe apiKey na ferramenta."
+    );
+  }
 
   const headers: Record<string, string> = {
     Authorization: `Bearer ${authKey}`,

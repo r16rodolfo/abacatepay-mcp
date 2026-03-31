@@ -10,13 +10,14 @@ export function registerV2StoreTools(server: McpServer) {
     {
       apiKey: v2ApiKey,
     },
-    async (params) => {
+    async (params, extra) => {
       const p = params as any;
       try {
         const res = await makeAbacatePayRequest<any>({
           version: "v2",
           path: "/store/get",
           apiKey: p.apiKey,
+          sessionId: extra.sessionId,
           method: "GET",
         });
         return { content: [{ type: "text", text: JSON.stringify(res.data, null, 2) }] };
@@ -32,13 +33,14 @@ export function registerV2StoreTools(server: McpServer) {
     {
       apiKey: v2ApiKey,
     },
-    async (params) => {
+    async (params, extra) => {
       const p = params as any;
       try {
         const res = await makeAbacatePayRequest<any>({
           version: "v2",
           path: "/public-mrr/merchant-info",
           apiKey: p.apiKey,
+          sessionId: extra.sessionId,
           method: "GET",
         });
         return { content: [{ type: "text", text: JSON.stringify(res.data, null, 2) }] };
@@ -54,13 +56,14 @@ export function registerV2StoreTools(server: McpServer) {
     {
       apiKey: v2ApiKey,
     },
-    async (params) => {
+    async (params, extra) => {
       const p = params as any;
       try {
         const res = await makeAbacatePayRequest<any>({
           version: "v2",
           path: "/public-mrr/mrr",
           apiKey: p.apiKey,
+          sessionId: extra.sessionId,
           method: "GET",
         });
         return { content: [{ type: "text", text: JSON.stringify(res.data, null, 2) }] };
@@ -78,13 +81,14 @@ export function registerV2StoreTools(server: McpServer) {
       startDate: z.string().describe("YYYY-MM-DD"),
       endDate: z.string().describe("YYYY-MM-DD"),
     },
-    async (params) => {
+    async (params, extra) => {
       const p = params as any;
       try {
         const res = await makeAbacatePayRequest<any>({
           version: "v2",
           path: `/public-mrr/revenue${buildQuery({ startDate: p.startDate, endDate: p.endDate })}`,
           apiKey: p.apiKey,
+          sessionId: extra.sessionId,
           method: "GET",
         });
         return { content: [{ type: "text", text: JSON.stringify(res.data, null, 2) }] };

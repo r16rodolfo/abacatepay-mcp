@@ -16,7 +16,7 @@ export function registerV2CustomerTools(server: McpServer) {
       zipCode: z.string().optional(),
       metadata: z.record(z.unknown()).optional(),
     },
-    async (params) => {
+    async (params, extra) => {
       const { apiKey, email, name, cellphone, taxId, zipCode, metadata } = params as any;
       try {
         const body: Record<string, unknown> = { email };
@@ -30,6 +30,7 @@ export function registerV2CustomerTools(server: McpServer) {
           version: "v2",
           path: "/customers/create",
           apiKey,
+          sessionId: extra.sessionId,
           method: "POST",
           body: JSON.stringify(body),
         });
@@ -60,7 +61,7 @@ export function registerV2CustomerTools(server: McpServer) {
       email: z.string().optional(),
       taxId: z.string().optional(),
     },
-    async (params) => {
+    async (params, extra) => {
       const p = params as any;
       try {
         const res = await makeAbacatePayRequest<any>({
@@ -74,6 +75,7 @@ export function registerV2CustomerTools(server: McpServer) {
             taxId: p.taxId,
           })}`,
           apiKey: p.apiKey,
+          sessionId: extra.sessionId,
           method: "GET",
         });
         const rows =
@@ -100,13 +102,14 @@ export function registerV2CustomerTools(server: McpServer) {
       apiKey: v2ApiKey,
       id: z.string().optional(),
     },
-    async (params) => {
+    async (params, extra) => {
       const p = params as any;
       try {
         const res = await makeAbacatePayRequest<any>({
           version: "v2",
           path: `/customers/get${buildQuery({ id: p.id })}`,
           apiKey: p.apiKey,
+          sessionId: extra.sessionId,
           method: "GET",
         });
         const d = res.data;
@@ -131,13 +134,14 @@ export function registerV2CustomerTools(server: McpServer) {
       apiKey: v2ApiKey,
       id: z.string(),
     },
-    async (params) => {
+    async (params, extra) => {
       const p = params as any;
       try {
         const res = await makeAbacatePayRequest<any>({
           version: "v2",
           path: `/customers/delete${buildQuery({ id: p.id })}`,
           apiKey: p.apiKey,
+          sessionId: extra.sessionId,
           method: "POST",
           body: "{}",
         });

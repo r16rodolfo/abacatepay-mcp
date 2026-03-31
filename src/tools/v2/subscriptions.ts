@@ -25,7 +25,7 @@ export function registerV2SubscriptionTools(server: McpServer) {
       externalId: z.string().optional(),
       metadata: z.record(z.unknown()).optional(),
     },
-    async (params) => {
+    async (params, extra) => {
       const p = params as any;
       try {
         const body: Record<string, unknown> = { items: p.items };
@@ -41,6 +41,7 @@ export function registerV2SubscriptionTools(server: McpServer) {
           version: "v2",
           path: "/subscriptions/create",
           apiKey: p.apiKey,
+          sessionId: extra.sessionId,
           method: "POST",
           body: JSON.stringify(body),
         });
@@ -68,7 +69,7 @@ export function registerV2SubscriptionTools(server: McpServer) {
       email: z.string().optional(),
       taxId: z.string().optional(),
     },
-    async (params) => {
+    async (params, extra) => {
       const p = params as any;
       try {
         const res = await makeAbacatePayRequest<any>({
@@ -84,6 +85,7 @@ export function registerV2SubscriptionTools(server: McpServer) {
             taxId: p.taxId,
           })}`,
           apiKey: p.apiKey,
+          sessionId: extra.sessionId,
           method: "GET",
         });
         const rows =

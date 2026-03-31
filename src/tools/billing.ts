@@ -29,7 +29,9 @@ export function registerBillingTools(server: McpServer) {
       apiKey: z
         .string()
         .optional()
-        .describe("Chave de API v1 (opcional se ABACATE_PAY_API_KEY configurada)"),
+        .describe(
+          "Override opcional. Em HTTP multi-tenant prefira Authorization ou X-API-Key; em stdio use ABACATE_PAY_API_KEY."
+        ),
       frequency: z
         .enum(["ONE_TIME", "MULTIPLE_PAYMENTS"])
         .default("ONE_TIME")
@@ -51,7 +53,7 @@ export function registerBillingTools(server: McpServer) {
       externalId: z.string().optional().describe("ID externo opcional da cobrança no seu sistema"),
       metadata: z.record(z.unknown()).optional().describe("Metadados opcionais da cobrança"),
     },
-    async (params) => {
+    async (params, extra) => {
       const {
         apiKey,
         frequency,
@@ -86,6 +88,7 @@ export function registerBillingTools(server: McpServer) {
           version: "v1",
           path: "/billing/create",
           apiKey,
+          sessionId: extra.sessionId,
           method: "POST",
           body: JSON.stringify(requestBody),
         });
@@ -131,15 +134,18 @@ export function registerBillingTools(server: McpServer) {
       apiKey: z
         .string()
         .optional()
-        .describe("Chave de API v1 (opcional se ABACATE_PAY_API_KEY configurada)"),
+        .describe(
+          "Override opcional. Em HTTP multi-tenant prefira Authorization ou X-API-Key; em stdio use ABACATE_PAY_API_KEY."
+        ),
     },
-    async (params) => {
+    async (params, extra) => {
       const { apiKey } = params as any;
       try {
         const response = await makeAbacatePayRequest<any>({
           version: "v1",
           path: "/billing/list",
           apiKey,
+          sessionId: extra.sessionId,
           method: "GET",
         });
 

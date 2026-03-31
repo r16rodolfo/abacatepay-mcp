@@ -5,6 +5,11 @@ import { randomUUID } from "node:crypto";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
+import { clearSessionApiKey, setSessionApiKey } from "./context.js";
+import {
+  type RequestWithValidatedApiKey,
+  validateApiKeyMiddleware,
+} from "./http/middleware.js";
 import { registerAllTools } from "./tools/index.js";
 
 function createServer(): McpServer {
@@ -29,12 +34,28 @@ async function main() {
       limit: "10mb",
     }));
 
+    app.use("/mcp", validateApiKeyMiddleware);
+
     const transports = new Map<string, StreamableHTTPServerTransport>();
 
     app.post("/mcp", async (req: Request, res: Response) => {
+      const validatedApiKey = (req as RequestWithValidatedApiKey).validatedApiKey;
+      if (!validatedApiKey) {
+        res.status(401).json({
+          jsonrpc: "2.0",
+          error: { code: -32001, message: "Unauthorized" },
+          id: null,
+        });
+        return;
+      }
+
       const sessionIdHeader = req.headers["mcp-session-id"];
       const sessionId =
         typeof sessionIdHeader === "string" ? sessionIdHeader : undefined;
+
+      if (sessionId) {
+        setSessionApiKey(sessionId, validatedApiKey);
+      }
 
       let transport: StreamableHTTPServerTransport | undefined;
       if (sessionId) {
@@ -43,10 +64,12 @@ async function main() {
 
       const body = (req as Request & { body?: unknown }).body;
       if (!transport && !sessionId && body !== undefined && isInitializeRequest(body)) {
+        const keyForThisTransport = validatedApiKey;
         transport = new StreamableHTTPServerTransport({
           sessionIdGenerator: () => randomUUID(),
           onsessioninitialized: (sid) => {
             transports.set(sid, transport!);
+            setSessionApiKey(sid, keyForThisTransport);
           },
         });
 
@@ -54,6 +77,7 @@ async function main() {
           const sid = transport?.sessionId;
           if (sid) {
             transports.delete(sid);
+            clearSessionApiKey(sid);
           }
         };
 
@@ -77,6 +101,12 @@ async function main() {
     });
 
     const handleSessionRequest = async (req: Request, res: Response) => {
+      const validatedApiKey = (req as RequestWithValidatedApiKey).validatedApiKey;
+      if (!validatedApiKey) {
+        res.status(401).send("Unauthorized");
+        return;
+      }
+
       const sessionIdHeader = req.headers["mcp-session-id"];
       const sessionId =
         typeof sessionIdHeader === "string" ? sessionIdHeader : undefined;
@@ -84,6 +114,9 @@ async function main() {
         res.status(400).send("Invalid or missing session ID");
         return;
       }
+
+      setSessionApiKey(sessionId, validatedApiKey);
+
       const transport = transports.get(sessionId);
       if (!transport) {
         res.status(400).send("Invalid or missing session ID");

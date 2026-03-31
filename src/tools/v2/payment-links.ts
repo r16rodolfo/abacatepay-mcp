@@ -24,7 +24,7 @@ export function registerV2PaymentLinkTools(server: McpServer) {
       externalId: z.string().optional(),
       metadata: z.record(z.unknown()).optional(),
     },
-    async (params) => {
+    async (params, extra) => {
       const p = params as any;
       try {
         const body: Record<string, unknown> = {
@@ -42,6 +42,7 @@ export function registerV2PaymentLinkTools(server: McpServer) {
           version: "v2",
           path: "/payment-links/create",
           apiKey: p.apiKey,
+          sessionId: extra.sessionId,
           method: "POST",
           body: JSON.stringify(body),
         });
@@ -69,7 +70,7 @@ export function registerV2PaymentLinkTools(server: McpServer) {
       externalId: z.string().optional(),
       status: z.enum(["PENDING", "EXPIRED", "CANCELLED", "PAID", "REFUNDED"]).optional(),
     },
-    async (params) => {
+    async (params, extra) => {
       const p = params as any;
       try {
         const res = await makeAbacatePayRequest<any>({
@@ -83,6 +84,7 @@ export function registerV2PaymentLinkTools(server: McpServer) {
             status: p.status,
           })}`,
           apiKey: p.apiKey,
+          sessionId: extra.sessionId,
           method: "GET",
         });
         const rows =
@@ -102,13 +104,14 @@ export function registerV2PaymentLinkTools(server: McpServer) {
       apiKey: v2ApiKey,
       id: z.string(),
     },
-    async (params) => {
+    async (params, extra) => {
       const p = params as any;
       try {
         const res = await makeAbacatePayRequest<any>({
           version: "v2",
           path: `/payment-links/get${buildQuery({ id: p.id })}`,
           apiKey: p.apiKey,
+          sessionId: extra.sessionId,
           method: "GET",
         });
         return { content: [{ type: "text", text: JSON.stringify(res.data, null, 2) }] };
