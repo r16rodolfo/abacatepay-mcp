@@ -41,9 +41,9 @@ async function main() {
     app.post("/mcp", async (req: Request, res: Response) => {
       const validatedApiKey = (req as RequestWithValidatedApiKey).validatedApiKey;
       if (!validatedApiKey) {
-        res.status(401).json({
+        res.status(403).json({
           jsonrpc: "2.0",
-          error: { code: -32001, message: "Unauthorized" },
+          error: { code: -32001, message: "Forbidden: missing API key" },
           id: null,
         });
         return;
@@ -103,7 +103,7 @@ async function main() {
     const handleSessionRequest = async (req: Request, res: Response) => {
       const validatedApiKey = (req as RequestWithValidatedApiKey).validatedApiKey;
       if (!validatedApiKey) {
-        res.status(401).send("Unauthorized");
+        res.status(403).send("Forbidden: missing API key");
         return;
       }
 

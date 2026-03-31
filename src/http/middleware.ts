@@ -27,12 +27,14 @@ export function validateApiKeyMiddleware(
   const finalKey = fromRequest?.trim() || globalApiKey?.trim() || "";
 
   if (!finalKey) {
-    res.status(401).json({
+    // Use 403 (not 401): MCP StreamableHTTP clients treat 401 as "start OAuth" and POST /register,
+    // which this server does not implement. Abacate keys go in Authorization / X-API-Key.
+    res.status(403).json({
       jsonrpc: "2.0",
       error: {
         code: -32001,
         message:
-          "Unauthorized: API key é obrigatória. Forneça via header Authorization: Bearer <key> ou X-API-Key, ou configure ABACATE_PAY_API_KEY / --key.",
+          "Forbidden: API key é obrigatória. No cliente remoto (ex.: Cursor), configure Authorization: Bearer <sua chave Abacate Pay> ou X-API-Key no MCP; no servidor use ABACATE_PAY_API_KEY / --key como fallback.",
       },
       id: null,
     });
