@@ -80,13 +80,30 @@ O próprio app **liga** o servidor para você. Você só configura o caminho do 
 
 **Em resumo:** colou a config, pôs a chave, ajustou o caminho, pronto. Não precisa configurar URL, porta ou “modo HTTP”.
 
-### Na internet (HTTP) — automações e outras ferramentas
+### Na internet (HTTP) — MCP remoto, automações e outras ferramentas
 
-Use quando você precisa integrar com nosso MCP usando n8n ou alguma ferramenta de automação
+Use o endpoint público quando você integra com n8n, outras automações ou quer **configuração remota** no cliente (sem `command` / processo local).
 
 | Onde roda | Endereço |
 |-----------|----------|
 | Servidor público Abacate Pay | `https://mcp.abacatepay.com/mcp` |
+
+**Cursor e Claude Code:** também dá para usar o MCP apontando para essa URL e enviando a chave nos headers (multi-tenant ou sem variável `ABACATE_PAY_API_KEY` no seu disco). Exemplo para o Cursor:
+
+```json
+{
+  "mcpServers": {
+    "abacatepay": {
+      "url": "https://mcp.abacatepay.com/mcp",
+      "headers": {
+        "Authorization": "Bearer API_KEY"
+      }
+    }
+  }
+}
+```
+
+Troque `API_KEY` pela sua chave ([Integrar](https://www.abacatepay.com) → **API Keys**) — **v1** ou **v2**, alinhada às ferramentas que você usa. O servidor HTTP também aceita `X-API-Key` em vez de `Authorization`, se o seu cliente preferir. No Claude Code, o formato é o mesmo conceito (URL + headers); confira o arquivo de configuração do produto para o nome exato da chave no JSON.
 
 ---
 
