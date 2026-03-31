@@ -2,10 +2,6 @@
 
 Um servidor MCP (Model Context Protocol) para integração com a API do Abacate Pay, permitindo gerenciar pagamentos, clientes e cobranças diretamente através de assistentes de IA como Claude e Cursor.
 
-## ✨ Multi-Tenancy
-
-**🔐 Multi-tenancy ativo!** O servidor suporta múltiplos clientes simultaneamente. Cada requisição pode incluir sua própria chave de API, permitindo que diferentes usuários/organizações usem o mesmo servidor MCP com suas respectivas contas do Abacate Pay.
-
 ## O que você pode fazer
 
 - 👥 **Gerenciar clientes**: Criar e listar clientes
@@ -15,6 +11,8 @@ Um servidor MCP (Model Context Protocol) para integração com a API do Abacate 
 - 🔄 **Simular pagamentos**: Testar fluxos em desenvolvimento
 
 ## 🚀 Instalação e Configuração
+
+> **💡 Dica**: Se você só precisa usar o servidor MCP via HTTP (AgentKit, n8n, etc.), não precisa instalar localmente! Use o servidor público em `https://mcp.abacatepay.com/mcp` - veja a seção [Uso Remoto e Automação](#-uso-remoto-e-automação).
 
 ### 1. Clone o repositório
 
@@ -29,19 +27,6 @@ bun install
 
 ### 2. Configure no Claude Desktop
 
-**Modo Multi-Tenant (Recomendado):**
-```json
-{
-  "mcpServers": {
-    "abacate-pay": {
-      "command": "bun",
-      "args": ["/caminho/completo/para/abacatepay-mcp/src/index.ts"]
-    }
-  }
-}
-```
-
-**Modo Legacy (Compatibilidade):**
 ```json
 {
   "mcpServers": {
@@ -58,19 +43,6 @@ bun install
 
 ### 3. Configure no Cursor
 
-**Modo Multi-Tenant (Recomendado):**
-```json
-{
-  "mcp.servers": {
-    "abacate-pay": {
-      "command": "bun",
-      "args": ["/caminho/completo/para/abacatepay-mcp/src/index.ts"]
-    }
-  }
-}
-```
-
-**Modo Legacy (Compatibilidade):**
 ```json
 {
   "mcp.servers": {
@@ -87,8 +59,7 @@ bun install
 
 **⚠️ Importante**: 
 - Substitua `/caminho/completo/para/abacatepay-mcp/` pelo caminho real onde você clonou o repositório
-- **Modo Multi-Tenant**: Não configure API key globalmente - ela será fornecida em cada requisição
-- **Modo Legacy**: Configure a API key globalmente para compatibilidade com versões anteriores
+- Sua chave de API deve ir em `env` para que as requisições aconteçam de forma segura
 
 ## 🔑 Como obter sua API Key
 
@@ -115,57 +86,70 @@ bun install
 
 ## 🔐 Como Funciona
 
-### Modo Multi-Tenant (Recomendado)
+O servidor MCP funciona de duas formas diferentes dependendo de como você vai usá-lo:
 
-Cada ferramenta aceita um parâmetro `apiKey` opcional:
+### 📱 Modo stdio (Cursor, Claude Desktop)
 
-**Criar Cliente:**
-```json
-{
-  "apiKey": "sua_chave_api_aqui",
-  "name": "João Silva",
-  "cellphone": "(11) 99999-9999",
-  "email": "joao@exemplo.com",
-  "taxId": "123.456.789-01"
-}
+No modo stdio, o servidor se comunica via entrada/saída padrão. A API key deve ser configurada via variável de ambiente na configuração do cliente.
+
+**Exemplo de uso:**
+```
+"Crie um cliente chamado João Silva, com email joao@exemplo.com, 
+celular (11) 99999-9999 e CPF 123.456.789-01"
 ```
 
-**Listar Clientes:**
-```json
-{
-  "apiKey": "sua_chave_api_aqui"
-}
+A API key é obtida automaticamente da variável de ambiente `ABACATE_PAY_API_KEY` configurada no cliente.
+
+### 🌐 Modo HTTP (AgentKit, n8n, automações)
+
+No modo HTTP, o servidor aceita requisições HTTP e suporta multi-tenancy através de headers HTTP.
+
+**Autenticação via Header:**
+
+A API key pode ser fornecida de duas formas:
+
+1. **Via Header `Authorization` (Recomendado):**
+```bash
+Authorization: Bearer sua_api_key_aqui
 ```
 
-### Modo Legacy (Compatibilidade)
-
-No modo legacy, as ferramentas funcionam sem o parâmetro `apiKey`:
-
-**Criar Cliente:**
-```json
-{
-  "name": "João Silva",
-  "cellphone": "(11) 99999-9999",
-  "email": "joao@exemplo.com",
-  "taxId": "123.456.789-01"
-}
+2. **Via Header `X-API-Key`:**
+```bash
+X-API-Key: sua_api_key_aqui
 ```
+
+**⚠️ Importante**: No modo HTTP, se você passar a API key no header, não precisa passá-la como parâmetro da ferramenta. O servidor automaticamente usa a chave do header.
 
 ### Vantagens
 
 ✅ **Múltiplos usuários**: Diferentes pessoas podem usar o mesmo servidor MCP  
 ✅ **Isolamento de dados**: Cada API key acessa apenas seus próprios dados  
-✅ **Flexibilidade**: Pode usar com ou sem API key global  
-✅ **Segurança**: Credenciais não ficam armazenadas no servidor (modo multi-tenant)  
+✅ **Flexibilidade**: Modo stdio para uso local, modo HTTP para automações  
+✅ **Segurança**: Credenciais via headers HTTP ou variáveis de ambiente  
 ✅ **Escalabilidade**: Fácil de compartilhar entre equipes  
-✅ **Compatibilidade**: Funciona com configurações existentes  
+✅ **Multi-tenancy**: Suporte a múltiplos clientes simultâneos no modo HTTP  
 
 ## 🌐 Uso Remoto e Automação
 
+### 🚀 Servidor Público Disponível
+
+**✨ Servidor MCP já deployado e disponível!**
+
+Você pode usar o servidor MCP da Abacate Pay diretamente sem precisar instalar localmente:
+
+**Endpoint:** `https://mcp.abacatepay.com/mcp`
+
+Basta configurar sua API key no header `Authorization` ou `X-API-Key` e começar a usar!
+
 ### HTTP Server para Automação
 
-Para usar com ferramentas como n8n, Zapier, ou aplicações customizadas:
+Para usar com ferramentas como n8n, Zapier, ou aplicações customizadas, você pode:
 
+**Opção 1: Usar o servidor público (Recomendado)**
+- Endpoint: `https://mcp.abacatepay.com/mcp`
+- Sem necessidade de instalação ou configuração
+
+**Opção 2: Rodar localmente**
 ```bash
 # Start HTTP server
 bun run start:http
@@ -176,9 +160,14 @@ MCP_PORT=8080 bun run start:http
 
 ### Exemplo de Integração
 
-**HTTP Request (n8n/Zapier):**
-```json
-POST https://your-server.com/mcp
+**HTTP Request (n8n/Zapier) - Usando servidor público:**
+```bash
+POST https://mcp.abacatepay.com/mcp
+Headers:
+  Authorization: Bearer sua_api_key_aqui
+  Content-Type: application/json
+
+Body:
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -186,7 +175,6 @@ POST https://your-server.com/mcp
   "params": {
     "name": "createPixQrCode",
     "arguments": {
-      "apiKey": "user_specific_key",
       "amount": 1000,
       "description": "Pagamento via automação"
     }
@@ -196,17 +184,20 @@ POST https://your-server.com/mcp
 
 **JavaScript/Node.js:**
 ```javascript
-async function createCustomer(apiKey, customerData) {
-  const response = await fetch('https://your-mcp-server.com/mcp', {
+async function createCustomer(customerData) {
+  const response = await fetch('https://mcp.abacatepay.com/mcp', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Authorization': 'Bearer sua_api_key_aqui',
+      'Content-Type': 'application/json'
+    },
     body: JSON.stringify({
       jsonrpc: '2.0',
       id: 1,
       method: 'tools/call',
       params: {
         name: 'createCustomer',
-        arguments: { apiKey, ...customerData }
+        arguments: customerData
       }
     })
   });
@@ -218,11 +209,11 @@ async function createCustomer(apiKey, customerData) {
 
 ### Erro de API Key
 ```
-❌ Falha ao criar cliente: HTTP 401: Unauthorized
+❌ Erro: API key é obrigatória. Configure via header HTTP ou configure globalmente via variável de ambiente ABACATE_PAY_API_KEY.
 ```
 **Solução**: 
-- **Modo Multi-Tenant**: Verifique se sua API Key está correta e foi fornecida no parâmetro `apiKey`
-- **Modo Legacy**: Verifique se sua API Key está correta na configuração global
+- **Modo stdio (Cursor/Claude Desktop)**: Verifique se a API key está configurada corretamente na variável de ambiente `env` do arquivo de configuração
+- **Modo HTTP**: Verifique se a API key está sendo enviada no header `Authorization: Bearer <key>` ou `X-API-Key: <key>`
 
 ### MCP Server não conecta
 **Solução**: 
@@ -249,6 +240,5 @@ Quer contribuir? Veja o [Guia de Contribuição](CONTRIBUTING.md).
 MIT - veja [LICENSE](LICENSE) para detalhes.
 
 ---
-
 
 

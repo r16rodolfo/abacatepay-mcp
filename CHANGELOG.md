@@ -1,5 +1,17 @@
 # abacatepay-mcp
 
+## 1.0.7
+
+### Major Changes
+
+- Refatoração completa do código para melhor organização e manutenibilidade
+  - Modularização: Funções utilitárias movidas para `src/utils/` (formatters, api-key, errors)
+  - Middleware HTTP movido para `src/http/middleware.ts`
+  - HTTP server reorganizado para `src/http/server.ts`
+  - Sistema de contexto de API key implementado em todas as ferramentas
+  - Tratamento de erros padronizado em todas as ferramentas
+
+
 ## 1.0.5
 
 ### Patch Changes
