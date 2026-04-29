@@ -10,6 +10,7 @@ import {
   type RequestWithValidatedApiKey,
   validateApiKeyMiddleware,
 } from "./http/middleware.js";
+import { oauthRouter } from "./oauth/routes.js";
 import { registerAllTools } from "./tools/index.js";
 
 function createServer(): McpServer {
@@ -34,6 +35,7 @@ async function main() {
       limit: "10mb",
     }));
 
+    app.use(oauthRouter);
     app.use("/mcp", validateApiKeyMiddleware);
 
     const transports = new Map<string, StreamableHTTPServerTransport>();
