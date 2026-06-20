@@ -22,7 +22,7 @@ async function main() {
   const server = createServer();
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.log("🥑 Abacate Pay MCP Server rodando em stdio");
+  console.error("🥑 Abacate Pay MCP Server rodando em stdio");
 }
 
 main();
